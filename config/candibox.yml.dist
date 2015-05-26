@@ -1,0 +1,19 @@
+# Certificate location
+box_cert: 'server.crt'
+box_key: 'server.key'
+portal_cert: 'example.com.crt'
+#portal_ca_cert
+
+# Portal certificate info
+portal_hostname: 'example.harid.ee'
+portal_port: 443
+
+# LDAP connection setup
+ldap_host: localhost
+ldap_port: 636
+ldap_method: :ssl
+ldap_base: dc=example,dc=com
+ldap_bind_dn: cn=Administrator,cn=Users,dc=example,dc=com
+ldap_password: Pa$$w0rd
+allow_anonymous: false
+
