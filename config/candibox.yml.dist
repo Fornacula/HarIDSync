@@ -1,12 +1,9 @@
-# Certificate location
-box_cert: 'server.crt'
-box_key: 'server.key'
-portal_cert: 'example.com.crt'
-#portal_ca_cert
-
-# Portal certificate info
 portal_hostname: 'example.harid.ee'
 portal_port: 443
+
+portal_ca_cert: 'harid.ee.crt'
+box_cert: 'server.crt'
+box_key: 'server.key'
 
 # LDAP connection setup
 ldap_host: localhost

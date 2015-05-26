@@ -20,15 +20,23 @@ $ cd candibox
 $ bundle install --path .bundle
 ```
 
-Make a copy of _ldap_config.yml.dist_ file and rename it to  _ldap_config.yml_. Change example settings with valid information:
+Make a copy of _candibox.yml.dist_ file and rename it to  _candibox.yml_. Change example settings with valid information:
 
 ```yml
-host: localhost
-port: 636
-method: :ssl
-base: dc=example,dc=com
-bind_dn: cn=Administrator,cn=Users,dc=example,dc=com
-password: password
+portal_hostname: 'example.harid.ee'
+portal_port: 443
+
+portal_ca_cert: 'harid.ee.crt'
+box_cert: 'server.crt'
+box_key: 'server.key'
+
+# LDAP connection setup
+ldap_host: localhost
+ldap_port: 636
+ldap_method: :ssl
+ldap_base: dc=example,dc=com
+ldap_bind_dn: cn=Administrator,cn=Users,dc=example,dc=com
+ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
 

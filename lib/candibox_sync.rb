@@ -134,9 +134,6 @@ class CandiboxSync < Thor
   end
 
   def portal_cert
-    @portal_cert = options[:server_ca_cert] || attributes['portal_cert']
+    @portal_cert = options[:server_ca_cert] || attributes['portal_ca_cert']
   end
-
-
-
 end
