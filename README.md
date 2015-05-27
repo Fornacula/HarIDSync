@@ -8,19 +8,17 @@ Candibox is backend for HARID (previously called Candient) portal. Candibox make
 
 ## Requirements
   - Ruby (2.0.x) and `bundler` gem _- tested with Ruby 2.1.2p95_
-  - remote or local LDAP server _- tested with Samba4_(see: [Installing Samga](#installing-samba))
+  - remote or local LDAP server _- tested with Samba4_(see: [Installing Samba](#installing-samba))
 
 ## Installation
 
-First step is to clone the Gihub project and install all Ruby dependencies into `.bundle` folder
+First step is to clone the Gihub project
 
 ```sh
 $ git clone https://github.com/hitsa/candibox
 $ cd candibox
-$ bundle install --path .bundle
 ```
-
-Make a copy of _candibox.yml.dist_ file and rename it to  _candibox.yml_. Change example settings with valid information:
+Make a copy of _candibox.yml.dist_ file in `config/` folder and rename it to  _candibox.yml_. Change example settings with valid information:
 
 ```yml
 portal_hostname: 'example.harid.ee'
@@ -29,6 +27,7 @@ portal_port: 443
 portal_ca_cert: 'harid.ee.crt'
 box_cert: 'server.crt'
 box_key: 'server.key'
+
 
 # LDAP connection setup
 ldap_host: localhost
@@ -40,27 +39,10 @@ ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
 
-
-## Creating a Self-Signed SSL Certificate
-
-The openssl library is required to generate your own certificate. Run the following command in your local environment to see if you already have openssl installed installed.
+Run setup script which will install all Ruby dependencies into `.bundle` folder and generate self-signed SSL certificate to `certs/` folder
 
 ```sh
-$ which openssl
-/usr/bin/openssl
-```
-
-If the which command does not return a path then you will need to install openssl yourself:
-
-```sh
-apt-get install openssl
-```
-
-Self-signed SSL certificate must be stored in certs/ folder. Run the following command to generate new self-signed certificate:
-
-```sh
-cd certs
-$ openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt
+$ bin/setup
 ```
 
 ## Usage
