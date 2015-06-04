@@ -23,7 +23,7 @@ def generate_cert_and_key(attributes, key_path, cert_path)
   cert.version     = 2
   cert.serial      = 0
   cert.not_before  = Time.now
-  cert.not_after   = cert.not_before + 3600
+  cert.not_after   = cert.not_before + 1 * 365 * 24 * 60 * 60 # 1 year validity
   cert.public_key  = key1.public_key
   cert.subject     = name
   File.open(cert_path, "wb") { |f| f.print cert.to_pem }
