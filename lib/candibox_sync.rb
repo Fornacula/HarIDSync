@@ -19,20 +19,20 @@ class CandiboxSync < Thor
 
     if options[:json_file].present?
       if File.exist?(options[:json_file])
-        data = JSON.parse(File.read(options[:json_file]))
-        user_list = data["users"]
-        group_list = data["groups"]
-        deleted_users = data["deleted_users"]
+        data           = JSON.parse(File.read(options[:json_file]))
+        user_list      = data["users"]
+        group_list     = data["groups"]
+        deleted_users  = data["deleted_users"]
         deleted_groups = data["deleted_groups"]
       else
         raise ArgumentError, "JSON file does not exists: '#{options[:json_file]}'"
       end
     else
       if host.present?
-        user_list = get_json_data('users.json')
-        group_list = get_json_data('groups.json')
-        p deleted_users = get_json_data('deleted_users.json')
-        deleted_groups = get_json_data('deleted_groups.json')
+        user_list       = get_json_data('users.json')
+        group_list      = get_json_data('groups.json')
+        deleted_users   = get_json_data('deleted_users.json')
+        deleted_groups  = get_json_data('deleted_groups.json')
       else
         raise ArgumentError, "Domain base or JSON file must be given as arguments"
       end
@@ -48,7 +48,7 @@ class CandiboxSync < Thor
   no_commands do
     def initialize_ldap
       if File.exist?(config_file)
-        ldap_config={
+        ldap_config = {
           host: attributes["ldap_host"],
           port: attributes["ldap_port"],
           method: attributes["ldap_method"],
@@ -73,18 +73,15 @@ class CandiboxSync < Thor
     end
 
     def get_json_data(type)
-      uri = URI.parse(smart_add_url_protocol("#{host}/api/v1/#{type}"))
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri          = URI.parse(smart_add_url_protocol("#{host}/api/v1/#{type}"))
+      http         = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
-      host
-      box_cert
-      box_key
-      portal_cert
+
       if box_cert.present? && box_key.present?
-        cert = File.read(File.expand_path(box_cert, "certs"))
-        p_key = File.read(File.expand_path(box_key, "certs"))
+        cert      = File.read(File.expand_path(box_cert, "certs"))
+        p_key     = File.read(File.expand_path(box_key, "certs"))
         http.cert = OpenSSL::X509::Certificate.new(cert)
-        http.key = OpenSSL::PKey::RSA.new(p_key)
+        http.key  = OpenSSL::PKey::RSA.new(p_key)
       else
         puts "Warning! Box cert and key was not given as argument."
       end
@@ -96,13 +93,19 @@ class CandiboxSync < Thor
         # Try to use system defaults
         cert_store.set_default_paths
       end
-      http.cert_store = cert_store
+      http.cert_store  = cert_store
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
       uri.request_uri
-      request = Net::HTTP::Get.new(uri.request_uri)
-      response = http.request(request)
-      json_data = JSON.parse(response.body)
-      return json_data
+      request          = Net::HTTP::Get.new(uri.request_uri)
+      response         = http.request(request)
+      
+      case response
+        when Net::HTTPSuccess then
+          json_data = JSON.parse(response.body)
+          return json_data
+        else
+          raise "HTTP Error #{response.code} - #{response.message}"
+      end
     rescue OpenSSL::SSL::SSLError => slerror
       puts "Error creating secure connection: #{slerror}"
       exit 1

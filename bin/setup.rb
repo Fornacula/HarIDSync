@@ -31,16 +31,15 @@ def generate_cert_and_key(attributes, key_path, cert_path)
   puts "Certificate expires in: #{cert.not_after}"
   puts "Certificate file output:"
   puts
-  File.readlines(cert_path).each do |line|
-    puts line
-  end
+  puts File.read(cert_path)
   puts "
   Before you can synchronize HarID portal and Candibox you must 
   ask EENet to authorize your newly generated certificate in HarID portal. 
   Please contact EENet customer support via email eenet@eenet.ee and send them 
   the contents of your certificate file. 
   
-  It can be copied from above."
+  It can be copied from above.
+  "
 end
 
 if File.exist?(config_file)
