@@ -1,6 +1,6 @@
 # Candibox
 
-Candibox is backend for HARID (previously called Candient) portal. Candibox makes requests to HARID JSON API and updates data in LDAP server by using Ruby scripts.
+Candibox is backend for HarID (previously called Candient) portal. Candibox makes requests to HarID JSON API and updates data in LDAP server by using Ruby scripts.
 
 ## Features
   - Candibox supports most modern popular LDAP servers including Samba4, OpenLDAP and Active Directory
@@ -24,10 +24,9 @@ Make a copy of _candibox.yml.dist_ file in `config/` folder and rename it to  _c
 portal_hostname: 'example.harid.ee'
 portal_port: 443
 
-portal_ca_cert: 'harid.ee.crt'
+#portal_ca_cert: 'harid.ee.crt'
 box_cert: 'server.crt'
 box_key: 'server.key'
-
 
 # LDAP connection setup
 ldap_host: localhost
@@ -39,7 +38,7 @@ ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
 
-Run setup script which will install all Ruby dependencies into `.bundle` folder and generate self-signed SSL certificate to `certs/` folder
+Run setup script which will install all Ruby dependencies into `.bundle` folder and generates self-signed SSL certificate to `certs/` folder
 
 ```sh
 $ bin/setup
@@ -59,12 +58,18 @@ or use help
 $ ./bin/candibox_sync help
 ```
 
-### How to sync data with HARID portal
+### How to sync data with HarID portal
 
-Before starting the script please ensure HARID portal HTTPS certificate can be validated by OpenSSL. By default, the script would use OpenSSL CA Bundle (in `/etc/ssl/certs` on most systems), but if for some reason that is not the case, download full certificate chain PEM file from the portal and use  `--server_ca_cert` to specify it's location to the script.
+Before starting the script please ensure HarID portal HTTPS certificate can be validated by OpenSSL. By default, the script would use OpenSSL CA Bundle (in `/etc/ssl/certs` on most systems), but if for some reason that is not the case, download full certificate chain PEM file from the portal and use  `--server_ca_cert` to specify it's location to the script.
 
-Candibox supports use cases where single Samba server is used for multiple HARID subdomains (e.g. as subtrees) and takes portal hostname as well as box private key and certificate as command line arguments for easier scripting or CRON usage:
+By default candibox uses `config/candibox.yml` settings to synchronize with portal but it also supports use cases where single Samba server is used for multiple HarID subdomains (e.g. as subtrees) and takes portal hostname as well as box private key and certificate as command line arguments for easier scripting or CRON usage:
 
+Synchronize with default values from `config/candibox.yml` file:
+```sh
+./bin/candibox_sync ldap_sync
+```
+
+Using command line arguments:
 ```sh
 ./bin/candibox_sync ldap_sync --host example.harid.ee --box_cert cert.crt --box_private_key key_file.key
 ```
