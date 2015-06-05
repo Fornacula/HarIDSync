@@ -2,6 +2,7 @@ require_relative 'ldap_user'
 require_relative 'ldap_group'
 require 'thor'
 require 'yaml'
+require 'openssl'
 
 class CandiboxSync < Thor
   desc "ldap_sync", "Update LDAP user and group attributes with JSON URL or file"
