@@ -44,7 +44,7 @@ Run setup script which will install all Ruby dependencies into `.bundle` folder 
 ```sh
 $ bin/setup
 ```
-Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox certificate in HarID portal. Please contact EENet customer support and send them the contents of your certificate file.
+**NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox certificate in HarID portal. Please contact EENet customer support and send them the contents of your certificate file.**
 
 ## Usage
 

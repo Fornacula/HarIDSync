@@ -13,20 +13,24 @@ def generate_cert_and_key(attributes, key_path, cert_path)
   hostname     = Socket.gethostname
 
   # Create key
-  key1 = OpenSSL::PKey::RSA.new(2048)
-  open(key_path, "w") do |io| io.write(key1.to_pem) end
+  key = OpenSSL::PKey::RSA.new(2048)
+  open(key_path, "w") do |io| io.write(key.to_pem) end
   puts "Generated new private key to #{key_path} "
   
-  # Create cert
+  # Create self-signed certificate
   name = OpenSSL::X509::Name.parse("CN=#{hostname}/C=#{country_name}")
-  cert = OpenSSL::X509::Certificate.new()
+  cert = OpenSSL::X509::Certificate.new
   cert.version     = 2
   cert.serial      = 0
   cert.not_before  = Time.now
   cert.not_after   = cert.not_before + 1 * 365 * 24 * 60 * 60 # 1 year validity
-  cert.public_key  = key1.public_key
+  cert.public_key  = key.public_key
   cert.subject     = name
-  File.open(cert_path, "wb") { |f| f.print cert.to_pem }
+
+  cert.issuer = name
+  cert.sign key, OpenSSL::Digest::SHA1.new
+  open cert_path, 'w' do |io| io.write cert.to_pem end
+    
   puts "Generated new self-signed certificate to #{cert_path} "
   puts "Certificate expires in: #{cert.not_after}"
   puts "Certificate file output:"
