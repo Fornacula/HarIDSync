@@ -175,8 +175,10 @@ or
       "homedir": "",
       "shell": "",
       "active": true,
-      "phone_numbers": null,
-      "email_addresses":[ "Fiona.Nahk@example.com"],
+      "primary_phone": "0491 570 156",
+      "phone_numbers": [ "0491 570 156", "0491 570 157", "0491 570 158" ],
+      "primary_email": "fiona@example.com",
+      "email_addresses":[ "fiona@example.com", "Fiona.Nahk@example.com" ],
       "updated_at": "2015-01-22T12:51:19.746Z"
     },
     {
@@ -202,7 +204,8 @@ or
       "shell": "",
       "active": true,
       "phone_numbers": null,
-      "email_addresses": ["Peeter.Kask@example.com"],
+      "primary_email": "Peeter.Kask@example.com",
+      "email_addresses": ["Peeter.Kask@example.com", "peeterkask@example.com"],
       "updated_at": "2015-01-22T12:51:19.746Z"
     },
     {
@@ -215,6 +218,7 @@ or
       "shell": null,
       "active": true,
       "phone_numbers": null,
+      "primary_email": "ester.tester@example.com",
       "email_addresses": ["ester.tester@example.com"],
       "updated_at": "2015-01-22T12:51:57.087Z"
     }

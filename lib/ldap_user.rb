@@ -43,8 +43,8 @@ class LdapUser < ActiveLdap::Base
   def generate_gecos
     data =[]
     data << self.full_name
-    data << (user["phone_numbers"].is_a?(Array) ? user["phone_numbers"].first : user["phone_numbers"])
-    data << (user["email_addresses"].is_a?(Array) ? user["email_addresses"].first : user["email_addresses"])
+    data << user["primary_phone"]
+    data << user["primary_email"]
 
     data.compact.join(",")
   end
@@ -71,9 +71,9 @@ class LdapUser < ActiveLdap::Base
         'cn'                          => Proc.new{self.generate_cn},
         'givenName'                   => 'first_name',
         'sn'                          => 'last_name',
-        'telephoneNumber'             => Proc.new{user["phone_numbers"].is_a?(Array) ? user["phone_numbers"].first : user["phone_numbers"]},
-        'otherTelephone'              => Proc.new{user["phone_numbers"].is_a?(Array) ? user["phone_numbers"].drop(1) : user["phone_numbers"]},
-        'mail'                        => Proc.new{user["email_addresses"].is_a?(Array) ? user["email_addresses"].first : user["email_addresses"]},
+        'telephoneNumber'             => 'primary_phone',
+        'otherTelephone'              => 'phone_numbers',
+        'mail'                        => 'primary_email',
         'unicodePwd'                  => Proc.new{self.ad_encoded_password},
         'homeDirectory'               => 'homedir',
         'loginShell'                  => 'shell',
