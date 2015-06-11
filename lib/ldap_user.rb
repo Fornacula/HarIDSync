@@ -146,7 +146,7 @@ class LdapUser < ActiveLdap::Base
     end
   end
 
-  def self.sync_all_to_ldap(users, private_key_file)
+  def self.sync_all_to_ldap(users, private_key_file, sync_method)
     puts "Syncing database users to LDAP"
     begin
       key = OpenSSL::PKey::RSA.new File.read(File.expand_path(private_key_file, "certs"))
