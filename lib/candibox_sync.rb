@@ -12,12 +12,8 @@ class CandiboxSync < Thor
   desc: "Hostname must match with HARID portal settings"
   method_option :box_private_key, :aliases => "-k", type: :string, 
   desc: "Private key must be stored in certs/ folder. Use bin/setup to generate new keypair"
-  method_option :box_pub, :aliases => "-p", type: :string, 
-  desc: "Public key must be stored in certs/ folder. Use bin/setup to generate new keypair"
-  method_option :token, :aliases => "-t", type: :string, desc: "HarID registered token"
+  method_option :secret, :aliases => "-t", type: :string, desc: "HarID registered secret"
   method_option :username, :aliases => "-u", type: :string, desc: "HarID registered API user"
-  method_option :box_cert, :aliases => "-c", type: :string, 
-  desc: "Certificate file must be stored in certs/ folder"
   method_option :server_ca_cert, :aliases => "-s", type: :string, 
   desc: "Portal certificate file must be stored in certs/ folder"
 
@@ -31,29 +27,23 @@ class CandiboxSync < Thor
         deleted_users  = data["deleted_users"]
         deleted_groups = data["deleted_groups"]
         synced_method  = "file"
-        synchronize(user_list, group_list, deleted_users, deleted_groups, synced_method)
+        synchronize(user_list, group_list, deleted_users, deleted_groups)
 
-      when host.present? && File.file?(box_key) && (File.file?(box_pub) && token) || File.file?(box_cert)
-          if File.file?(box_pub) && token
-            synced_method  = "token"
-          elsif File.file?(box_cert)
-            synced_method  = "cert"
-          end
+      when host && File.file?(box_key) && secret && username
           user_list = get_json_data('users.json')
           p group_list     = get_json_data('groups.json')
           deleted_users  = get_json_data('deleted_users.json')
           deleted_groups = get_json_data('deleted_groups.json')
-          synchronize(user_list, group_list, deleted_users, deleted_groups, synced_method)
+          synchronize(user_list, group_list, deleted_users, deleted_groups)
       else
-        raise ArgumentError, "Missing mandatory files"
-        #puts `curl https://eenet.candient.vm/api/v1/users.json --cert certs/server.crt --key certs/server.key --cacert certs/candient.vm.crt | jq .`
+        raise ArgumentError, "Missing mandatory configuration"
     end
     puts 'All done.'
   end
 
   no_commands do
-    def synchronize(users, groups, deleted_users, deleted_groups, synced_method)
-      LdapUser.sync_all_to_ldap(users, box_key, synced_method)
+    def synchronize(users, groups, deleted_users, deleted_groups)
+      LdapUser.sync_all_to_ldap(users, box_key)
       LdapGroup.sync_all_to_ldap(groups)
       LdapUser.remove_from_ldap(deleted_users)
       LdapGroup.remove_from_ldap(deleted_groups)
@@ -103,20 +93,8 @@ class CandiboxSync < Thor
       
       request = Net::HTTP::Get.new(uri.request_uri)
 
-      if token && username
-        #request.basic_auth(username, token)
-        
-        #request['authorization'] = "Token token=#{token}"
-
-        #auth = ActionController::HttpAuthentication::Token.encode_credentials(token)
-        #request.headers['Authorization'] = auth
-      else
-        if File.file?(box_cert)
-          #kas prikeyd on ka vaja saata kui kasutajanime ja tokeniga autentitakse??
-          http.key = OpenSSL::PKey::RSA.new(File.read(box_key))
-          http.cert        = OpenSSL::X509::Certificate.new(File.read(box_cert))
-          http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        end
+      if secret && username
+        request.basic_auth(username, secret)
       end
 
       response = http.request(request)
@@ -149,8 +127,8 @@ class CandiboxSync < Thor
     @host = options[:host] || attributes['portal_hostname']
   end
 
-  def token
-    @token = options[:token] || attributes['secret']
+  def secret
+    @secret = options[:secret] || attributes['secret']
   end
 
   def username
@@ -159,14 +137,6 @@ class CandiboxSync < Thor
 
   def box_key
     @box_key = File.expand_path(options[:box_private_key] || attributes['box_key'].to_s, "certs")
-  end
-  
-  def box_cert
-    @box_cert = File.expand_path(options[:box_cert] || attributes['box_cert'].to_s, "certs")
-  end
-
-  def box_pub
-    @box_pub = File.expand_path(options[:box_pub] || attributes['box_pub'].to_s, "certs")
   end
 
   def portal_cert

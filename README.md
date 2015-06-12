@@ -116,11 +116,19 @@ _Note 1:_ For Samba to bind to correct network interfaces, be sure to include th
 --option="interfaces=lo eth0" --option="bind interfaces only=yes"
 ```
 
-_Note 2:_ Samba server must be **DNS server** for the LAN, so it needs to be told a correct IP address to forward DNS requests outside of Samba domain. Usually network _router_ IP would be a good choice:
+_Note 2:_ Samba server must be **DNS server for the LAN and to itself**, so it needs to be told a correct IP address to forward DNS requests outside of Samba domain. Usually network _router_ IP would be a good choice:
 
 ```
 --option="dns forwarder = 192.168.0.1"
 ```
+
+and set samba server's own nameserver to local IP
+
+```
+# file: /etc/resolv.conf
+domain example.com
+nameserver AA.BB.CC.DD
+``` 
 
 _Note 3:_ Candibox assumes that **UNIX addons** (i.e. `--use-rfc2307`) are present, so do not remove that option.
 
