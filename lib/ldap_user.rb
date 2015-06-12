@@ -115,19 +115,7 @@ class LdapUser < ActiveLdap::Base
     cpw = user["password_crypt"]
     return nil if cpw.nil?
 
-    ckey = user["encrypted_key"]
-    skey = self.class.private_key.private_decrypt(Base64.decode64(ckey))
-    aes_decrypt(cpw,skey)
-  end
-
-  # Decrypts string and discards IV-sized random data from beginning
-  def aes_decrypt(encrypted, ckey)
-    encrypted = Base64.decode64(encrypted.strip)
-    cipher = OpenSSL::Cipher.new CIPHER
-    cipher.decrypt
-    cipher.key = ckey
-    decrypted = cipher.update(encrypted) + cipher.final
-    decrypted[IV_SIZE..-1]
+    self.class.private_key.private_decrypt(Base64.decode64(cpw))
   end
 
   def self.find_ldap_user(uid)

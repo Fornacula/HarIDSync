@@ -2,45 +2,24 @@ require 'pathname'
 require 'yaml'
 require 'socket'
 require 'openssl'
+config_file = File.expand_path("../config/candibox.yml", __dir__)
 
-ROOT_DIR    = File.expand_path("../", Pathname.new(__dir__).realpath)
-CERT_DIR    = File.expand_path("certs", ROOT_DIR)
-config_file = File.expand_path("config/candibox.yml", ROOT_DIR)
+def generate_cert_and_key(attributes, pri_key_path, pub_key_path)
+  # Create keypair
+  rsa_key = OpenSSL::PKey::RSA.new(2048)
+  open(pri_key_path, "w") do |io| io.write(rsa_key.to_pem) end
+  puts "Generated new private key to #{pri_key_path} "
+  open pub_key_path, 'w' do |io| io.write rsa_key.public_key end
+  puts "Generated new public key to #{pub_key_path} "
 
-def generate_cert_and_key(attributes, key_path, cert_path)
-  # Certificate information
-  country_name = 'EE'
-  hostname     = Socket.gethostname
-
-  # Create key
-  key = OpenSSL::PKey::RSA.new(2048)
-  open(key_path, "w") do |io| io.write(key.to_pem) end
-  puts "Generated new private key to #{key_path} "
-  
-  # Create self-signed certificate
-  name = OpenSSL::X509::Name.parse("CN=#{hostname}/C=#{country_name}")
-  cert = OpenSSL::X509::Certificate.new
-  cert.version     = 2
-  cert.serial      = 0
-  cert.not_before  = Time.now
-  cert.not_after   = cert.not_before + 1 * 365 * 24 * 60 * 60 # 1 year validity
-  cert.public_key  = key.public_key
-  cert.subject     = name
-
-  cert.issuer = name
-  cert.sign key, OpenSSL::Digest::SHA1.new
-  open cert_path, 'w' do |io| io.write cert.to_pem end
-    
-  puts "Generated new self-signed certificate to #{cert_path} "
-  puts "Certificate expires in: #{cert.not_after}"
-  puts "Certificate file output:"
+  puts "Public key file output:"
   puts
-  puts File.read(cert_path)
+  puts rsa_key.public_key
   puts "
   Before you can synchronize HarID portal and Candibox you must 
-  ask EENet to authorize your newly generated certificate in HarID portal. 
+  ask EENet to authorize your newly generated key in HarID portal. 
   Please contact EENet customer support via email eenet@eenet.ee and send them 
-  the contents of your certificate file. 
+  the contents of your public key file. 
   
   It can be copied from above.
   "
@@ -48,15 +27,15 @@ end
 
 if File.exist?(config_file)
   attributes = YAML.load_file(config_file)
-  key        = File.expand_path("#{attributes['box_key']}", CERT_DIR)
-  cert       = File.expand_path("#{attributes['box_cert']}", CERT_DIR)
+  key        = File.expand_path("../certs/#{attributes['box_key']}", __dir__)
+  public_key = File.expand_path("../certs/#{attributes['box_pub']}", __dir__)
   
   puts 'Checking certificate and key'
-  if File.exist?(cert) && File.exist?(key)
+  if File.exist?(public_key) && File.exist?(key)
     puts 'Nothing to do. Certificate and keyfile already exists.'
   else
     puts 'Generate candibox certificate and key'
-    generate_cert_and_key(attributes, key, cert)
+    generate_cert_and_key(attributes, key, public_key)
   end
 else
   raise ArgumentError, "Config file does not exists: '#{config_file}'"
