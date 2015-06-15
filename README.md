@@ -18,15 +18,23 @@ First step is to clone the Gihub project
 $ git clone https://github.com/hitsa/candibox
 $ cd candibox
 ```
-Make a copy of _candibox.yml.dist_ file in `config/` folder and rename it to  _candibox.yml_. Change example settings with valid information:
+
+Run setup script which will install all Ruby dependencies into `.bundle` folder and generates keypair to `certs/` folder and default configuration file named `candibox.yml` to `config/` folder.
+
+```sh
+$ bin/setup
+```
+
+Change generated settings in `config/candibox.yml` with valid information. Example is given in `config/candibox.yml.dist` file:
 
 ```yml
-portal_hostname: 'example.harid.ee'
+portal_hostname: example.harid.ee
 portal_port: 443
+api_user: SomEu5eR
+secret: SecretTok3n
 
-#portal_ca_cert: 'harid.ee.crt'
-box_cert: 'server.crt'
-box_key: 'server.key'
+#portal_ca_cert: harid.ee.crt
+box_key: server.key
 
 # LDAP connection setup
 ldap_host: localhost
@@ -38,12 +46,7 @@ ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
 
-Run setup script which will install all Ruby dependencies into `.bundle` folder and generates self-signed SSL certificate to `certs/` folder
-
-```sh
-$ bin/setup
-```
-**NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox certificate in HarID portal. Please contact EENet customer support and send them the contents of your certificate file.**
+**NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox public_key in HarID portal. Please contact EENet customer support and send them the contents of your certificate file. Public key will can be printed out if you run setup script again:**
 
 ## Usage
 
@@ -62,7 +65,7 @@ $ ./bin/candibox_sync help
 
 Before starting the script please ensure HarID portal HTTPS certificate can be validated by OpenSSL. By default, the script would use OpenSSL CA Bundle (in `/etc/ssl/certs` on most systems), but if for some reason that is not the case, download full certificate chain PEM file from the portal and use  `--server_ca_cert` to specify it's location to the script.
 
-By default candibox uses `config/candibox.yml` settings to synchronize with portal but it also supports use cases where single Samba server is used for multiple HarID subdomains (e.g. as subtrees) and takes portal hostname as well as box private key and certificate as command line arguments for easier scripting or CRON usage:
+By default candibox uses `config/candibox.yml` settings to synchronize with portal but it also supports use cases where single Samba server is used for multiple HarID subdomains (e.g. as subtrees) and takes portal hostname as well as box private key and username with secret as command line arguments for easier scripting or CRON usage:
 
 Synchronize with default values from `config/candibox.yml` file:
 ```sh
@@ -71,7 +74,7 @@ Synchronize with default values from `config/candibox.yml` file:
 
 Using command line arguments:
 ```sh
-./bin/candibox_sync ldap_sync --host example.harid.ee --box_cert cert.crt --box_private_key key_file.key
+./bin/candibox_sync ldap_sync --host example.harid.ee --username SomEu5eR --secret SecretTok3n --box_private_key key_file.key
 ```
 
 ### How to sync data by using JSON file
@@ -85,19 +88,19 @@ $ ./bin/candibox_sync  ldap_sync --file path/to/file/json_file.json
 <a name="installing-samba"></a>
 ## Installing Samba
 
-Below examples are based on Debian Wheezy, but they are generic enough to be easily adapted for other distributions or operating systems.
+Below examples are based on Debian Jessie, but they are generic enough to be easily adapted for other distributions or operating systems.
 
 First, ensure the package manager has access to **Samba 4**:
 
 ```
-echo "deb http://http.debian.net/debian wheezy-backports main" > /etc/apt/sources.list.d/backports.list
+echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list
 apt-get update
 ```
 
 Then install Samba 4 with required tools:
 
 ```
-aptitude -t wheezy-backports install samba smbclient
+aptitude -t jessie-backports install samba smbclient
 ```
 
 ### Configuring Samba
@@ -162,11 +165,11 @@ service samba start
 
 Add cron job
 ```sh
-00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync  --host domain_base.harid.ee --box_cert cert.crt --box_private_key key_file.key
+00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync'
 ```
 or
 ```sh
-00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync  --host domain_base.harid.ee --box_cert cert.crt --box_private_key key_file.key --server_ca_cert harid.ee.crt'
+00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync  --host example.harid.ee --box_private_key key_file.key --username SomEu5eR --secret SecretTok3n'
 ```
 
 ### <a name="json_example"></a>JSON data format

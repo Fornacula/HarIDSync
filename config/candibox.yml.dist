@@ -1,9 +1,10 @@
-portal_hostname: 'example.harid.ee'
+portal_hostname: example.harid.ee
 portal_port: 443
+api_user: SomEu5eR
+secret: SecretTok3n
 
-#portal_ca_cert: 'harid.ee.crt'
-box_cert: 'server.crt'
-box_key: 'server.key'
+#portal_ca_cert: harid.ee.crt
+box_key: server.key
 
 # LDAP connection setup
 ldap_host: localhost
