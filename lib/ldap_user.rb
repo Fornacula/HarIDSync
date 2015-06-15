@@ -13,11 +13,6 @@ class LdapUser < ActiveLdap::Base
   ACCOUNTDISABLE       = 0x0002
   NORMAL_ACCOUNT       = 0x0200
 
-  # Use AES with 256-bit key in CBC mode (but still 128-bit blocks)
-  CIPHER = 'AES-256-CBC'
-  # AES uses 128-bit (16 byte) blocks
-  IV_SIZE = 16
-
   class << self
     attr_accessor :private_key
   end

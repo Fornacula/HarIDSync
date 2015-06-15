@@ -3,6 +3,8 @@ require_relative 'ldap_group'
 require 'thor'
 require 'yaml'
 require 'openssl'
+require 'net/https'
+require 'uri'
 
 class CandiboxSync < Thor
   desc "ldap_sync", "Update LDAP user and group attributes with JSON URL or file"
@@ -18,6 +20,7 @@ class CandiboxSync < Thor
   desc: "Portal certificate file must be stored in certs/ folder"
 
   def ldap_sync
+    check_configuration
     initialize_ldap unless ActiveLdap::Base.connected?
     case 
       when File.file?(options[:json_file].to_s)
@@ -26,47 +29,54 @@ class CandiboxSync < Thor
         group_list     = data["groups"]
         deleted_users  = data["deleted_users"]
         deleted_groups = data["deleted_groups"]
-        synced_method  = "file"
         synchronize(user_list, group_list, deleted_users, deleted_groups)
-
-      when host && File.file?(box_key) && secret && username
-          user_list = get_json_data('users.json')
-          p group_list     = get_json_data('groups.json')
-          deleted_users  = get_json_data('deleted_users.json')
-          deleted_groups = get_json_data('deleted_groups.json')
-          synchronize(user_list, group_list, deleted_users, deleted_groups)
       else
-        raise ArgumentError, "Missing mandatory configuration"
+        user_list      = get_json_data('users.json')
+        group_list     = get_json_data('groups.json')
+        deleted_users  = get_json_data('deleted_users.json')
+        deleted_groups = get_json_data('deleted_groups.json')
+        synchronize(user_list, group_list, deleted_users, deleted_groups)
     end
     puts 'All done.'
   end
 
   no_commands do
-    def synchronize(users, groups, deleted_users, deleted_groups)
-      LdapUser.sync_all_to_ldap(users, box_key)
-      LdapGroup.sync_all_to_ldap(groups)
-      LdapUser.remove_from_ldap(deleted_users)
-      LdapGroup.remove_from_ldap(deleted_groups)
-      puts "Synchronization completed."
+    def check_configuration
+      raise ArgumentError, "Missing mandatory configuration" unless File.exists? config_file
+      
+      attributes['portal_hostname'] = host
+      attributes['secret'] = secret
+      attributes['api_user'] = username
+      attributes['box_key'] = box_key
+
+      mandatory_attributes =  %w(portal_hostname portal_port api_user secret box_key ldap_host ldap_port 
+        ldap_method ldap_base ldap_bind_dn ldap_password)
+      
+      missing_values = mandatory_attributes.collect {|attr| attr unless attributes[attr]}.compact
+
+      if File.file?(options[:json_file].to_s)
+        missing_values -= %w(portal_hostname portal_port api_user secret)
+      end
+
+      if missing_values.any?
+        raise ArgumentError, "Missing mandatory configuration: #{missing_values.join(', ')}"
+      end
     end
     
     def initialize_ldap
-      if File.exist?(config_file)
-        ldap_config = {
-          host: attributes["ldap_host"],
-          port: attributes["ldap_port"],
-          method: attributes["ldap_method"],
-          base: attributes["ldap_base"],
-          bind_dn: attributes["ldap_bind_dn"],
-          password: attributes["ldap_password"],
-          allow_anonymous: attributes["allow_anonymous"]
-        }
+      ldap_config = {
+        host: attributes["ldap_host"],
+        port: attributes["ldap_port"],
+        method: attributes["ldap_method"],
+        base: attributes["ldap_base"],
+        bind_dn: attributes["ldap_bind_dn"],
+        password: attributes["ldap_password"],
+        allow_anonymous: attributes["allow_anonymous"]
+      }
 
-        ActiveLdap::Base.setup_connection ldap_config
-        ActiveLdap::Base.connection
-      else
-        raise ArgumentError, "Ldap config file does not exist: #{config_file}"
-      end
+      ActiveLdap::Base.setup_connection ldap_config
+      ActiveLdap::Base.connection
+      raise ConnectionError, "Could not establish LDAP connection." unless ActiveLdap::Base.connected?
     end
 
     def smart_add_url_protocol(url)
@@ -77,7 +87,6 @@ class CandiboxSync < Thor
     end
 
     def get_json_data(type)
-      # http://www.rubyinside.com/nethttp-cheat-sheet-2940.html
       uri          = URI.parse(smart_add_url_protocol("#{host}/api/v1/#{type}"))
       http         = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
@@ -108,6 +117,14 @@ class CandiboxSync < Thor
     rescue OpenSSL::SSL::SSLError => slerror
       puts "Error creating secure connection: #{slerror}"
       exit 1
+    end
+
+    def synchronize(users, groups, deleted_users, deleted_groups)
+      LdapUser.sync_all_to_ldap(users, box_key)
+      LdapGroup.sync_all_to_ldap(groups)
+      LdapUser.remove_from_ldap(deleted_users)
+      LdapGroup.remove_from_ldap(deleted_groups)
+      puts "Synchronization completed."
     end
   end
 
