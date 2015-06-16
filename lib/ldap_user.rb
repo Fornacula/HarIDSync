@@ -123,8 +123,8 @@ class LdapUser < ActiveLdap::Base
       self.set_attributes!
       self.save!
     rescue => e
-      puts "Error syncing user to LDAP: #{e}"
-      puts self.errors.full_messages
+      $stderr.puts "Error syncing user to LDAP: #{e}"
+      $stderr.puts self.errors.full_messages
       puts "error (See log for more details)"
     end
   end
@@ -135,7 +135,7 @@ class LdapUser < ActiveLdap::Base
       key = OpenSSL::PKey::RSA.new File.read(File.expand_path(private_key_file, "certs"))
       self.private_key = key
     rescue => e
-      puts "Error opening private key file: #{e}"
+      $stderr.puts "Error opening private key file: #{e}"
       exit 1
     end
     users.each do |user|
@@ -154,8 +154,8 @@ class LdapUser < ActiveLdap::Base
           ldap_user.destroy
         end
       rescue => e
-        puts "Error occured while deleting user #{user['uid']} from LDAP: #{e}"
-        puts "error (See log for more details)"
+        $stderr.puts "Error occured while deleting user #{user['uid']} from LDAP: #{e}"
+        $stderr.puts "error (See log for more details)"
       end
     end
   end

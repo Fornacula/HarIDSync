@@ -2,8 +2,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 script_dir=`dirname $(readlink -f $0)`
-# Do any other automated setup that you need to do here
+# Install all Ruby dependencies into .bundle folder
 cd `dirname "$script_dir"` && bundle install --path .bundle
 
-# Generate candibox certificate and key
-cd $script_dir && ruby setup.rb
+# Generate candibox private key and default settings 
+echo cd `dirname "$script_dir"` && bin/candibox_sync setup

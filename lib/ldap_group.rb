@@ -72,8 +72,8 @@ class LdapGroup < ActiveLdap::Base
       self.save!
 
     rescue => e
-      puts "Error syncing group to LDAP: #{e}"
-      puts self.errors.full_messages
+      $stderr.puts "Error syncing group to LDAP: #{e}"
+      $stderr.puts self.errors.full_messages
       puts "error (See log for more details)"
     end
   end
@@ -96,7 +96,7 @@ class LdapGroup < ActiveLdap::Base
           ldap_group.destroy
         end
       rescue => e
-        puts "Error occured while deleting group from LDAP: #{e}"
+        $stderr.puts "Error occured while deleting group from LDAP: #{e}"
         puts "error (See log for more details)"
       end
     end

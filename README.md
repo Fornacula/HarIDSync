@@ -19,7 +19,7 @@ $ git clone https://github.com/hitsa/candibox
 $ cd candibox
 ```
 
-Run setup script which will install all Ruby dependencies into `.bundle` folder and generates keypair to `certs/` folder and default configuration file named `candibox.yml` to `config/` folder.
+Run setup script which will install all Ruby dependencies into `.bundle` folder. Setup script will also generate keypair to `certs/` folder and default configuration file `candibox.yml` to `config/` folder.
 
 ```sh
 $ bin/setup
@@ -46,7 +46,11 @@ ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
 
-**NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox public_key in HarID portal. Please contact EENet customer support and send them the contents of your certificate file. Public key will can be printed out if you run setup script again:**
+**NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox public key in HarID portal. Please contact EENet customer support and send them the contents of your public key. Public key is printed out every time you run previously mentioned setup script or use command below:**
+
+```sh
+$ bin/candibox_sync read_public_key
+```
 
 ## Usage
 
