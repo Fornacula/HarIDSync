@@ -6,4 +6,4 @@ script_dir=`dirname $(readlink -f $0)`
 cd `dirname "$script_dir"` && bundle install --path .bundle
 
 # Generate candibox private key and default settings 
-echo cd `dirname "$script_dir"` && bin/candibox_sync setup
+echo cd `dirname "$script_dir"` && bin/candibox setup

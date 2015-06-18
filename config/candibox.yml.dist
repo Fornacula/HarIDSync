@@ -4,7 +4,7 @@ api_user: SomEu5eR
 secret: SecretTok3n
 
 #portal_ca_cert: harid.ee.crt
-box_key: server.key
+box_key: candibox.key
 
 # LDAP connection setup
 ldap_host: localhost

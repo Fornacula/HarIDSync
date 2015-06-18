@@ -7,7 +7,7 @@ Candibox is backend for HarID (previously called Candient) portal. Candibox make
   - CRUD for LDAP server users and groups
 
 ## Requirements
-  - Ruby (2.0.x) and `bundler` gem _- tested with Ruby 2.1.2p95_
+  - Ruby (2.0.x with development headers - ruby-dev) and `bundler` gem _- tested with Ruby 2.1.2p95_
   - remote or local LDAP server _- tested with Samba4_(see: [Installing Samba](#installing-samba))
 
 ## Installation
@@ -86,7 +86,7 @@ Using command line arguments:
 Make sure that JSON includes all the mandatory attributes (see [example below](#json_example)) and give full path to file as an argument:
 
 ```sh
-$ ./bin/candibox_sync  ldap_sync --file path/to/file/json_file.json
+$ ./bin/candibox  sync --file path/to/file/json_file.json
 ```
 
 <a name="installing-samba"></a>
@@ -94,26 +94,20 @@ $ ./bin/candibox_sync  ldap_sync --file path/to/file/json_file.json
 
 Below examples are based on Debian Jessie, but they are generic enough to be easily adapted for other distributions or operating systems.
 
-First, ensure the package manager has access to **Samba 4**:
+Ensure the package manager has access to **Samba 4**:
 
 ```
-echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list
-apt-get update
-```
-
-Then install Samba 4 with required tools:
-
-```
-aptitude -t jessie-backports install samba smbclient
+apt-get install samba smbclient
 ```
 
 ### Configuring Samba
 
 Samba 4 comes with a _provisioning_ tool **samba-tool domain provision** that does most of the heavy lifting. Only thing left is to put together a correct command line.
 
-On Debian, Samba installs preconfigured, but we need to reconfigure it, so remove default conf:
+On Debian, Samba installs preconfigured, but we need to reconfigure it, so stop samba service and remove default conf:
 
 ```
+service smbd stop
 mv /etc/samba/smb.conf /etc/samba/smb.conf.dist
 ```
 
@@ -159,7 +153,7 @@ Above command configures Samba with LDAP suffix: **DC=example,DC=com** (with NET
 And don't forget to start samba server
 
 ```
-service samba start
+service samba-ad-dc start
 ```
 
 
@@ -169,11 +163,11 @@ service samba start
 
 Add cron job
 ```sh
-00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync'
+00 06 * * * /bin/bash -l -c './bin/candibox sync'
 ```
 or
 ```sh
-00 06 * * * /bin/bash -l -c './bin/candibox_sync ldap_sync  --host example.harid.ee --box_private_key key_file.key --username SomEu5eR --secret SecretTok3n'
+00 06 * * * /bin/bash -l -c './bin/candibox sync  --host example.harid.ee --box_private_key key_file.key --username SomEu5eR --secret SecretTok3n'
 ```
 
 ### <a name="json_example"></a>JSON data format
