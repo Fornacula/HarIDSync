@@ -1,4 +1,6 @@
-/config/candibox.yml
+/config/*.yml
+/config/*.key
+/config/*.crt
 
 # added by GitSavvy
 /.bundle/

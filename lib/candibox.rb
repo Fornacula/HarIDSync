@@ -23,6 +23,7 @@ class Candibox < Thor
   desc: "Portal certificate file must be stored in certs/ folder."
 
   def sync
+    mv_cert_dir_files_to_config_dir if File.exists? File.expand_path("../certs/", __dir__)
     check_configuration
     initialize_ldap unless ActiveLdap::Base.connected?
     user_list      = get_json_data('users.json')
@@ -30,7 +31,7 @@ class Candibox < Thor
     deleted_users  = get_json_data('deleted_users.json')
     deleted_groups = get_json_data('deleted_groups.json')
     synchronize(user_list, group_list, deleted_users, deleted_groups)
-    puts 'All done.'
+    say 'All done.'
   rescue => e
     $stderr.puts e
   end
@@ -48,17 +49,18 @@ class Candibox < Thor
   desc: "HarID registered secret."
   method_option :username, :aliases => "-u", type: :string,
   desc: "HarID registered API user."
+  
   def setup
+    mv_cert_dir_files_to_config_dir if File.exists? File.expand_path("../certs/", __dir__)
     generate_configuration_file unless File.exist?(config_file)
-    
     if File.exist?(box_key)
-      puts "
+      say "
   Private key exist in #{box_key}.
   In case you'd like generate new private key you must remove already existing key file first and then run setup again.
       "
       read_public_key
     else
-      puts '
+      say '
   Generating new candibox keypair
       '
       generate_key
@@ -71,7 +73,7 @@ class Candibox < Thor
   def read_public_key
     if File.file? box_key
       rsa_key = OpenSSL::PKey::RSA.new File.read(box_key)
-      puts "
+      say "
     Public key output:
 
 #{rsa_key.public_key}
@@ -89,6 +91,16 @@ class Candibox < Thor
   end
 
   no_commands do
+    def mv_cert_dir_files_to_config_dir
+      certs_dir = File.expand_path("../certs/", __dir__)
+      say "Moving files from certs/ folder to config/"
+      cert_files = Dir.glob(File.expand_path("*", certs_dir))
+      config_dir = File.expand_path("../config/", __dir__)
+      FileUtils.mv cert_files, config_dir, verbose: true
+      say "Removing certs/ folder."
+      FileUtils.rmdir certs_dir
+    end
+
     def check_configuration
       raise ArgumentError, "Missing mandatory configuration" unless File.exists? config_file
       
@@ -190,7 +202,7 @@ class Candibox < Thor
       LdapGroup.sync_all_to_ldap(groups)
       LdapUser.remove_from_ldap(deleted_users)
       LdapGroup.remove_from_ldap(deleted_groups)
-      puts "Synchronization completed."
+      say "Synchronization completed."
     end
   end
 
@@ -198,15 +210,15 @@ class Candibox < Thor
 
   def generate_key
     rsa_key = OpenSSL::PKey::RSA.new(2048)
-    open(box_key, "w") do |io| io.write(rsa_key.to_pem) end
-    puts "
+    open box_key, 'w' do |io| io.write rsa_key.to_pem end
+    say "
   Generated new private key file to #{box_key}
     "
     read_public_key
   end
 
   def config_file
-    @config_file = File.expand_path(options[:config_file] || "candibox.yml", "#{__dir__}/../config/")
+    @config_file = File.expand_path("../config/#{options[:config_file] || 'candibox.yml'}", __dir__)
   end
 
   def attributes
@@ -228,10 +240,10 @@ class Candibox < Thor
   end
 
   def box_key
-    @box_key = File.expand_path(options[:box_private_key] || attributes['box_key'].to_s, "config")
+    @box_key = File.expand_path("../config/#{options[:box_private_key] || attributes['box_key'].to_s}", __dir__)
   end
 
   def portal_cert
-    @portal_cert = File.expand_path(options[:server_ca_cert] || attributes['portal_ca_cert'].to_s, "config")
+    @portal_cert = File.expand_path("../config/#{options[:server_ca_cert] || attributes['portal_ca_cert'].to_s}", __dir__)
   end
 end

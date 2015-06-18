@@ -49,20 +49,20 @@ allow_anonymous: false
 **NB! Before you can synchronize with HarID portal you must ask EENet to authorize your newly generated Candibox public key in HarID portal. Please contact EENet customer support and send them the contents of your public key. Public key is printed out every time you run previously mentioned setup script or use command below:**
 
 ```sh
-$ bin/candibox_sync read_public_key
+$ bin/candibox read_public_key
 ```
 
 ## Usage
 
 To see all script commands just run:
 ```sh
-$ ./bin/candibox_sync
+$ ./bin/candibox
 ```
 
 or use help
 
 ```sh
-$ ./bin/candibox_sync help
+$ ./bin/candibox help
 ```
 
 ### How to sync data with HarID portal
@@ -73,21 +73,15 @@ By default candibox uses `config/candibox.yml` settings to synchronize with port
 
 Synchronize with default values from `config/candibox.yml` file:
 ```sh
-./bin/candibox_sync ldap_sync
+./bin/candibox sync
 ```
 
 Using command line arguments:
 ```sh
-./bin/candibox_sync ldap_sync --host example.harid.ee --username SomEu5eR --secret SecretTok3n --box_private_key key_file.key
+./bin/candibox sync --host example.harid.ee --username SomEu5eR --secret SecretTok3n --box_private_key key_file.key
 ```
 
-### How to sync data by using JSON file
-
-Make sure that JSON includes all the mandatory attributes (see [example below](#json_example)) and give full path to file as an argument:
-
-```sh
-$ ./bin/candibox  sync --file path/to/file/json_file.json
-```
+See HarID portal JSON API  [data example](#json_example) below
 
 <a name="installing-samba"></a>
 ## Installing Samba
