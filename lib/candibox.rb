@@ -52,8 +52,8 @@ class Candibox < Thor
   
   def setup
     mv_cert_dir_files_to_config_dir if File.exists? File.expand_path("../certs/", __dir__)
-    generate_configuration_file unless File.exist?(config_file)
-    if File.exist?(box_key)
+    generate_configuration_file unless File.file?(config_file)
+    if File.file?(box_key)
       say "
   Private key exist in #{box_key}.
   In case you'd like generate new private key you must remove already existing key file first and then run setup again.
@@ -102,20 +102,18 @@ class Candibox < Thor
     end
 
     def check_configuration
-      raise ArgumentError, "Missing mandatory configuration" unless File.exists? config_file
+      raise ArgumentError, "Missing mandatory configuration in #{config_file}" unless File.file? config_file
       
-      attributes['portal_hostname'] = host
-      attributes['secret'] = secret
-      attributes['api_user'] = username
-      attributes['box_key'] = box_key
+      missing_files = [:config_file, :box_key].select{|k| File.file?(send(k).to_s) == false}
+      missing_options = [:host, :secret, :username].select{|k| send(k).nil?}
 
-      mandatory_attributes =  %w(portal_hostname portal_port api_user secret box_key ldap_host ldap_port 
-        ldap_method ldap_base ldap_bind_dn ldap_password)
-      
-      missing_values = mandatory_attributes.collect {|attr| attr unless attributes[attr]}.compact
+      mandatory_attributes = %w(portal_port ldap_host ldap_port ldap_method ldap_base ldap_bind_dn ldap_password)
+      missing_attributes = mandatory_attributes.collect {|attr| attr unless attributes[attr]}.compact
+
+      missing_values = missing_files + missing_options + missing_attributes
 
       if missing_values.any?
-        raise ArgumentError, "Missing mandatory configuration: #{missing_values.join(', ')}"
+        raise ArgumentError, "Missing mandatory configuration: #{missing_values.join(', ')}. Try running 'candibox setup'."
       end
     end
 
@@ -209,12 +207,16 @@ class Candibox < Thor
   private
 
   def generate_key
-    rsa_key = OpenSSL::PKey::RSA.new(2048)
-    open box_key, 'w' do |io| io.write rsa_key.to_pem end
-    say "
-  Generated new private key file to #{box_key}
-    "
-    read_public_key
+    if attributes['box_key']
+      rsa_key = OpenSSL::PKey::RSA.new(2048)
+      open box_key, 'w' do |io| io.write rsa_key.to_pem end
+      say "
+    Generated new private key file to #{box_key}
+      "
+      read_public_key
+    else
+      raise ArgumentError, "Missing box_key attribute in #{config_file}."
+    end
   end
 
   def config_file
@@ -222,7 +224,7 @@ class Candibox < Thor
   end
 
   def attributes
-    if File.exist?(config_file)
+    if File.file?(config_file)
       @attributes ||= YAML.load(File.read(config_file))
     end
   end

@@ -11,6 +11,7 @@ Candibox is backend for HarID (previously called Candient) portal. Candibox make
   - remote or local LDAP server _- tested with Samba4_(see: [Installing Samba](#installing-samba))
 
 ## Installation
+Candibox is available as debian package (see [releases](https://github.com/hitsa/candibox/releases) for further instructions) or read instructions below to install latest unstable version:
 
 First step is to clone the Gihub project
 
@@ -19,7 +20,7 @@ $ git clone https://github.com/hitsa/candibox
 $ cd candibox
 ```
 
-Run setup script which will install all Ruby dependencies into `.bundle` folder. Setup script will also generate keypair to `certs/` folder and default configuration file `candibox.yml` to `config/` folder.
+Run setup command which will install all Ruby dependencies into `.bundle` folder and  generates keypair and default configuration file `candibox.yml` to `config/` folder.
 
 ```sh
 $ bin/setup
@@ -55,6 +56,7 @@ $ bin/candibox read_public_key
 ## Usage
 
 To see all script commands just run:
+
 ```sh
 $ ./bin/candibox
 ```
@@ -72,16 +74,16 @@ Before starting the script please ensure HarID portal HTTPS certificate can be v
 By default candibox uses `config/candibox.yml` settings to synchronize with portal but it also supports use cases where single Samba server is used for multiple HarID subdomains (e.g. as subtrees) and takes portal hostname as well as box private key and username with secret as command line arguments for easier scripting or CRON usage:
 
 Synchronize with default values from `config/candibox.yml` file:
+
 ```sh
 ./bin/candibox sync
 ```
 
 Using command line arguments:
+
 ```sh
 ./bin/candibox sync --host example.harid.ee --username SomEu5eR --secret SecretTok3n --box_private_key key_file.key
 ```
-
-See HarID portal JSON API  [data example](#json_example) below
 
 <a name="installing-samba"></a>
 ## Installing Samba
@@ -138,18 +140,29 @@ _Note 3:_ Candibox assumes that **UNIX addons** (i.e. `--use-rfc2307`) are prese
 
 An example of full provisioning is below. Be sure to **adjust** it to your configuration:
 
-```
+```sh
 samba-tool domain provision --use-rfc2307 --dns-backend=SAMBA_INTERNAL --server-role=dc --option="interfaces=lo eth0" --option="bind interfaces only=yes" --option="dns forwarder = 192.168.0.1" --option="tls enabled = yes" --adminpass='Pa$$w0rd' --realm='example.com' --domain='example'
 ```
 
-Above command configures Samba with LDAP suffix: **DC=example,DC=com** (with NETBIOS domain _EXAMPLE_), uses internal DNS server as backend and adds **UNIX addons** to the schema.
+Above command configures Samba with LDAP suffix: **DC=example,DC=com** (with NETBIOS domain _EXAMPLE_), uses internal DNS server as backend and adds **UNIX addons** to the schema. 
+
+**NB! By default Samba 4 has password expiration set to 42 days. To turn off password expiration to all users run the following command:**
+
+```sh
+samba-tool domain passwordsettings set --min-pwd-age=0 --max-pwd-age=0
+```
+
+or disable expiry for administrator account only:
+
+```sh
+samba-tool user setexpiry Administrator --noexpiry
+```
 
 And don't forget to start samba server
 
-```
+```sh
 service samba-ad-dc start
 ```
-
 
 ## Examples
 
@@ -164,7 +177,7 @@ or
 00 06 * * * /bin/bash -l -c './bin/candibox sync  --host example.harid.ee --box_private_key key_file.key --username SomEu5eR --secret SecretTok3n'
 ```
 
-### <a name="json_example"></a>JSON data format
+### <a name="json_example"></a>HarID JSON API data format
 
 ```json
 {
