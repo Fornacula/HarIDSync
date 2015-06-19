@@ -36,7 +36,7 @@ class LdapUser < ActiveLdap::Base
 
   # Return UNIX style GECOS info
   def generate_gecos
-    data =[]
+    data = []
     data << self.full_name
     data << user["primary_phone"]
     data << user["primary_email"]
@@ -70,7 +70,7 @@ class LdapUser < ActiveLdap::Base
         'otherTelephone'              => 'phone_numbers',
         'mail'                        => 'primary_email',
         'unicodePwd'                  => Proc.new{self.ad_encoded_password},
-        'homeDirectory'               => 'homedir',
+        'unixHomeDirectory'           => 'unix_home_directory',
         'loginShell'                  => 'shell',
         'gecos'                       => Proc.new{self.generate_gecos},
         'objectCategory'              => Proc.new{object_category},
@@ -132,7 +132,7 @@ class LdapUser < ActiveLdap::Base
   def self.sync_all_to_ldap(users, private_key_file)
     puts "Syncing database users to LDAP"
     begin
-      key = OpenSSL::PKey::RSA.new File.read(File.expand_path(private_key_file, "certs"))
+      key = OpenSSL::PKey::RSA.new File.read(private_key_file)
       self.private_key = key
     rescue => e
       $stderr.puts "Error opening private key file: #{e}"
