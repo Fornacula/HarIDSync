@@ -2,6 +2,8 @@ require 'active_ldap'
 require 'base64'
 require 'openssl'
 class LdapUser < ActiveLdap::Base
+  GEN_PW_LENGTH = 24
+
   ldap_mapping dn_attribute: 'cn', prefix: 'cn=Users',
                classes: ['top', 'organizationalPerson', 'person', 'user'],
                scope: :one
@@ -20,7 +22,7 @@ class LdapUser < ActiveLdap::Base
   def add_auxiliary_classes
     AUXILIARY_CLASSES.each do |ac|
       self.classes.include?(ac) or self.add_class(ac)
-    end 
+    end
   end
 
   def set_attributes!
@@ -29,7 +31,7 @@ class LdapUser < ActiveLdap::Base
       self.send "#{attr}=", value
     end
   end
-  
+
   def full_name
     "#{user['first_name']} #{user['last_name']}".rstrip
   end
@@ -101,9 +103,11 @@ class LdapUser < ActiveLdap::Base
   # Encode plain-text password into AD format
   def ad_encoded_password
     password = decrypted_password
+    password = SecureRandom.base64(GEN_PW_LENGTH)[0...GEN_PW_LENGTH] if self.new_record? && password.to_s.empty?
     return nil if password.to_s.empty?
     return "\"#{password}\"".encode(Encoding.find('UTF-16LE'))
   end
+
 
   # Decrypt password
   def decrypted_password
