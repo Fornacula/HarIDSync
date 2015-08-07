@@ -1,3 +1,32 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Candibox](#candibox)
+  - [Features](#features)
+  - [Instructions on Ubuntu/Debian](#instructions-on-ubuntudebian)
+    - [Requirements](#requirements)
+    - [Install Candibox](#install-candibox)
+    - [Usage](#usage)
+    - [How to sync data with HarID portal](#how-to-sync-data-with-harid-portal)
+    - [Installing Samba](#installing-samba)
+      - [Configuring Samba](#configuring-samba)
+    - [Scheduled updates with CRON](#scheduled-updates-with-cron)
+  - [Instructions on Windows](#instructions-on-windows)
+    - [AD DC configuration](#ad-dc-configuration)
+    - [Install prerequisites](#install-prerequisites)
+      - [Ruby2.1.6 installation](#ruby216-installation)
+        - [Add root certificate to Ruby](#add-root-certificate-to-ruby)
+      - [DevKit installation](#devkit-installation)
+      - [Install bundler gem](#install-bundler-gem)
+      - [Install Git](#install-git)
+    - [Install Candibox](#install-candibox-1)
+    - [Usage](#usage-1)
+    - [Scheduled updates](#scheduled-updates)
+  - [<a name="json_example"></a>HarID JSON API data format](#a-namejson_exampleaharid-json-api-data-format)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Candibox
 
 Candibox is backend for HarID (previously called Candient) portal. Candibox makes requests to HarID JSON API and updates data in LDAP server by using Ruby scripts.
@@ -6,11 +35,11 @@ Candibox is backend for HarID (previously called Candient) portal. Candibox make
   - Candibox supports most modern popular LDAP servers including Samba4, OpenLDAP and Active Directory
   - CRUD for LDAP server users and groups
 
-## Requirements
+## Instructions on Ubuntu/Debian
+### Requirements
   - Ruby (2.0.x with development headers - ruby-dev) and `bundler` gem _- tested with Ruby 2.1.2p95_
-  - remote or local LDAP server _- tested with Samba4_(see: [Installing Samba](#installing-samba))
-
-## Installation
+  - remote or local LDAP server or Windows AD DS _- tested with Samba4 (see: [Installing Samba](#installing-samba)) and Windows AD DS_
+### Install Candibox
 Candibox is available as debian package (see [releases](https://github.com/hitsa/candibox/releases) for further instructions) or read instructions below to install latest unstable version:
 
 First step is to clone the Gihub project
@@ -53,7 +82,7 @@ allow_anonymous: false
 $ bin/candibox read_public_key
 ```
 
-## Usage
+### Usage
 
 To see all script commands just run:
 
@@ -86,7 +115,7 @@ Using command line arguments:
 ```
 
 <a name="installing-samba"></a>
-## Installing Samba
+### Installing Samba
 
 Below examples are based on Debian Jessie, but they are generic enough to be easily adapted for other distributions or operating systems.
 
@@ -96,7 +125,7 @@ Ensure the package manager has access to **Samba 4**:
 apt-get install samba smbclient
 ```
 
-### Configuring Samba
+#### Configuring Samba
 
 Samba 4 comes with a _provisioning_ tool **samba-tool domain provision** that does most of the heavy lifting. Only thing left is to put together a correct command line.
 
@@ -125,7 +154,7 @@ and set samba server's own nameserver to local IP
 # file: /etc/resolv.conf
 domain example.com
 nameserver AA.BB.CC.DD
-``` 
+```
 
 _Note 3:_ Candibox assumes that **UNIX addons** (i.e. `--use-rfc2307`) are present, so do not remove that option.
 
@@ -144,7 +173,7 @@ An example of full provisioning is below. Be sure to **adjust** it to your confi
 samba-tool domain provision --use-rfc2307 --dns-backend=SAMBA_INTERNAL --server-role=dc --option="interfaces=lo eth0" --option="bind interfaces only=yes" --option="dns forwarder = 192.168.0.1" --option="tls enabled = yes" --adminpass='Pa$$w0rd' --realm='example.com' --domain='example'
 ```
 
-Above command configures Samba with LDAP suffix: **DC=example,DC=com** (with NETBIOS domain _EXAMPLE_), uses internal DNS server as backend and adds **UNIX addons** to the schema. 
+Above command configures Samba with LDAP suffix: **DC=example,DC=com** (with NETBIOS domain _EXAMPLE_), uses internal DNS server as backend and adds **UNIX addons** to the schema.
 
 **NB! By default Samba 4 has password expiration set to 42 days. To turn off password expiration to all users run the following command:**
 
@@ -164,7 +193,6 @@ And don't forget to start samba server
 service samba-ad-dc start
 ```
 
-## Examples
 
 ### Scheduled updates with CRON
 
@@ -176,8 +204,113 @@ or
 ```sh
 00 06 * * * /bin/bash -l -c './bin/candibox sync  --host example.harid.ee --box_private_key key_file.key --username SomEu5eR --secret SecretTok3n'
 ```
+## Instructions on Windows
+### AD DC configuration
+SSL port 636 must be enabled to use candibox with AD DC. To generate self-signed
+certificate follow the instructions here:
 
-### <a name="json_example"></a>HarID JSON API data format
+http://gregtechnobabble.blogspot.com/2012/11/enabling-ldap-ssl-in-windows-2012-part-1.html
+
+### Install prerequisites
+#### Ruby2.1.6 installation
+1. Download Ruby2.1.6 or Ruby2.1.6(x64) installer from http://rubyinstaller.org/downloads/
+2. Run installer
+3. Select language
+4. Agree with terms
+5. Select option `Add Ruby executables to your PATH`
+6. Select option `Associate .rb and .rbw files with this Ruby installation`
+7. Finish installation
+8. Test Ruby by running following command in CMD:
+```
+ruby -v
+```
+Result should be something like:
+```
+ruby 2.1.6p336 (2015-04-13 revision 50298) [x64-mingw32]
+```
+
+##### Add root certificate to Ruby
+https://github.com/oneclick/rubyinstaller/issues/148
+
+#### DevKit installation
+Candibox depends on some native extensions. Ruby Development Kit must be installed to use them.
+1. Download Development Kit `For use with Ruby 2.0 and above (x64 - 64bits only)` from http://rubyinstaller.org/downloads/
+2. Extract it to permanent location for example `C:\Ruby21-DevKit-x64`
+3. In CMD navigate to extracted development kit folder and run the following commands:
+
+ ```
+ ruby dk.rb init
+ ruby dk.rb install
+ ```
+
+#### Install bundler gem
+1. In CMD run the following command:
+ ```
+ gem install bundler
+ ```
+
+#### Install Git
+Install git to be able to use gems from git repositories.
+1. Download installer from http://msysgit.github.io/
+2. Select option `Use Git from the Windows Command Prompt`
+3. Rest of the options use default settings
+4. After installation restart CMD
+
+### Install Candibox
+1. Navigate to system root folder and run command:
+ ```
+ cd C:/
+ git clone https://github.com/hitsa/candibox.git
+ ```
+
+2. Install project dependencies by running bundle install in candibox project folder:
+ ```
+ cd C:/candibox
+ bundle install --path vendor/bundle
+ ```
+
+3. Generate new keyfile by running following command in project folder:
+ ```
+ ruby bin/candibox setup
+ ```
+
+4. Ask EENet to authorize your newly generated Candibox public key in HarID portal.
+5. Verify settings in `config.yml`.
+
+### Usage
+Try to synchronize data with HarID portal by running command:
+ ```
+ ruby bin/candibox sync
+ ```
+
+ or with full filepath:
+  ```
+  ruby C:\candibox\bin\candibox sync
+  ```
+
+### Scheduled updates
+  * Greate new task with `Task Scheduler`
+  * Navigate to `General` tab. Add task name and description and select option:
+
+    `Run whether user is logged or not`
+  * Navigate to `Triggers` tab and create new trigger. It is recommended to set
+  synchronization to be triggered daily basis repeated every 5 minutes.
+  * Navigate to `Action` tab and create new action.
+
+    * Select action type `Start a program`
+
+    * Type to `Program/script` field:
+    ```
+    ruby
+    ```
+
+    * Add arguments:
+    ```
+    C:\candibox\bin\candibox sync
+    ```
+  And you're good to go.
+
+## <a name="json_example"></a>HarID JSON API data format
 
 ```json
 {
