@@ -1,8 +1,9 @@
 require 'active_ldap'
 class LdapGroup < ActiveLdap::Base
-  ldap_mapping dn_attribute: 'cn', prefix: 'cn=Users',
+  DEFAULT_PREFIX = 'CN=Users'
+  ldap_mapping dn_attribute: 'cn', prefix: '',
                classes: ['top', 'group'],
-               scope: :one
+               scope: :sub
 
   AUXILIARY_CLASSES = %w(posixGroup)
 
@@ -24,7 +25,7 @@ class LdapGroup < ActiveLdap::Base
   def set_attributes!
     raise ArgumentError, "Group is not set" if self.group.blank?
     attributes_from_group.each do |attr, value|
-      self.send "#{attr}=", value
+      self.set_attribute(attr, value)
     end
   end
 
@@ -65,11 +66,51 @@ class LdapGroup < ActiveLdap::Base
     LdapGroup.find(:first, "sAMAccountName=#{name}") || LdapGroup.new(name)
   end
 
+  # Store previous DN base value so it won't get lost when setting CN attribute
+  def store_prev_dn_base(b = nil)
+    @old_dn_base = b || dn.parent
+  end
+
+  def old_dn_base
+    @old_dn_base
+  end
+
+  # Setting new CN value resets base and prefix, restore it
+  def compute_base
+    old_dn_base || super
+  end
+
+  # Prepend either OU or Default Prefix to the base
+  def base_prefix
+    group['ou'] || DEFAULT_PREFIX
+  end
+
+  # Computes new OU base from attributes
+  def compute_new_base
+    ActiveLdap::DN.parse([base_prefix,self.class.base.to_s].compact.join(','))
+  end
+
+  # Ensure that the entity is moved to new OU if needed
+  def ensure_ou_change
+    new_base = compute_new_base
+    if new_base != old_dn_base
+      rdn = "#{dn_attribute}=#{self.send(self.dn_attribute)}"
+      self.class.connection.modify_rdn(dn, rdn, true, new_base.to_s)
+      # Store changes to current model too
+      store_prev_dn_base new_base
+      return true
+    else
+      return false
+    end
+  end
+
   def sync
     begin
+      store_prev_dn_base
       self.add_auxiliary_classes
       self.set_attributes!
       self.save!
+      ensure_ou_change
 
     rescue => e
       $stderr.puts "Error syncing group to LDAP: #{e}"

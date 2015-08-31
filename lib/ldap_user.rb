@@ -3,10 +3,11 @@ require 'base64'
 require 'openssl'
 class LdapUser < ActiveLdap::Base
   GEN_PW_LENGTH = 24
+  DEFAULT_PREFIX = 'CN=Users'
 
-  ldap_mapping dn_attribute: 'cn', prefix: 'cn=Users',
+  ldap_mapping dn_attribute: 'cn', prefix: '',
                classes: ['top', 'organizationalPerson', 'person', 'user'],
-               scope: :one
+               scope: :sub
 
   AUXILIARY_CLASSES = %w(posixAccount inetOrgPerson)
   attr_accessor :user
@@ -28,7 +29,7 @@ class LdapUser < ActiveLdap::Base
   def set_attributes!
     raise ArgumentError, "User is not set" if self.user.blank?
     attributes_from_user.each do |attr, value|
-      self.send "#{attr}=", value
+      self.set_attribute(attr, value)
     end
   end
 
@@ -121,11 +122,51 @@ class LdapUser < ActiveLdap::Base
     LdapUser.find(:first, "sAMAccountName=#{uid}") || LdapUser.new(uid)
   end
 
+  # Store previous DN base value so it won't get lost when setting CN attribute
+  def store_prev_dn_base(b = nil)
+    @old_dn_base = b || dn.parent
+  end
+
+  def old_dn_base
+    @old_dn_base
+  end
+
+  # Setting new CN value resets base and prefix, restore it
+  def compute_base
+    old_dn_base || super
+  end
+
+  # Prepend either OU or Default Prefix to the base
+  def base_prefix
+    user['ou'] || DEFAULT_PREFIX
+  end
+
+  # Computes new OU base from attributes
+  def compute_new_base
+    ActiveLdap::DN.parse([base_prefix,self.class.base.to_s].compact.join(','))
+  end
+
+  # Ensure that the entity is moved to new OU if needed
+  def ensure_ou_change
+    new_base = compute_new_base
+    if new_base != old_dn_base
+      rdn = "#{dn_attribute}=#{self.send(self.dn_attribute)}"
+      self.class.connection.modify_rdn(dn, rdn, true, new_base.to_s)
+      # Store changes to current model too
+      store_prev_dn_base new_base
+      return true
+    else
+      return false
+    end
+  end
+
   def sync
     begin
-      self.add_auxiliary_classes
-      self.set_attributes!
-      self.save!
+      store_prev_dn_base
+      add_auxiliary_classes
+      set_attributes!
+      save!
+      ensure_ou_change
     rescue => e
       $stderr.puts "Error syncing user to LDAP: #{e}"
       $stderr.puts self.errors.full_messages
