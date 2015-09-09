@@ -70,8 +70,8 @@ box_key: server.key
 ldap_host: localhost
 ldap_port: 636
 ldap_method: :ssl
-ldap_base: dc=example,dc=com
-ldap_bind_dn: cn=Administrator,cn=Users,dc=example,dc=com
+ldap_base: DC=example,DC=com
+ldap_bind_dn: CN=Administrator,CN=Users,DC=example,DC=com
 ldap_password: Pa$$w0rd
 allow_anonymous: false
 ```
