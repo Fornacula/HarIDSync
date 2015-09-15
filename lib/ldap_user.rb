@@ -168,7 +168,7 @@ class LdapUser < ActiveLdap::Base
       save!
       ensure_ou_change
     rescue => e
-      $stderr.puts "Error syncing user to LDAP: #{e}"
+      $stderr.puts "Error syncing #{self.cn} user #{self.sAMAccountName} to LDAP: #{e}"
       $stderr.puts self.errors.full_messages
       puts "error (See log for more details)"
     end

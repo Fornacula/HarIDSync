@@ -115,9 +115,8 @@ class LdapGroup < ActiveLdap::Base
       self.set_attributes!
       self.save!
       ensure_ou_change
-      
     rescue => e
-      $stderr.puts "Error syncing group to LDAP: #{e}"
+      $stderr.puts "Error syncing group #{self.sAMAccountName} to LDAP: #{e}"
       $stderr.puts self.errors.full_messages
       puts "error (See log for more details)"
     end
