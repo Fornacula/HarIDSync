@@ -1,3 +1,4 @@
+require_relative 'candibox_helpers'
 require_relative 'ldap_user'
 require_relative 'ldap_group'
 require 'thor'
@@ -8,6 +9,7 @@ require 'uri'
 require 'pathname'
 require 'socket'
 require 'fileutils'
+
 
 class Candibox < Thor
   desc "sync", "Update LDAP user and group attributes with HarID JSON API"
@@ -177,8 +179,8 @@ class Candibox < Thor
         host: attributes["ldap_host"],
         port: attributes["ldap_port"],
         method: attributes["ldap_method"],
-        base: attributes["ldap_base"],
-        bind_dn: attributes["ldap_bind_dn"],
+        base: CandiboxHelpers.ensure_uppercase_dn_component(attributes["ldap_base"]),
+        bind_dn: CandiboxHelpers.ensure_uppercase_dn_component(attributes["ldap_bind_dn"]),
         password: attributes["ldap_password"],
         allow_anonymous: attributes["allow_anonymous"]
       }
@@ -205,7 +207,7 @@ class Candibox < Thor
   end
 
   private
-
+  
   def generate_key
     if attributes['box_key']
       rsa_key = OpenSSL::PKey::RSA.new(2048)

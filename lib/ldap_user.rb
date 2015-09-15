@@ -5,7 +5,7 @@ class LdapUser < ActiveLdap::Base
   GEN_PW_LENGTH = 24
   DEFAULT_PREFIX = 'CN=Users'
 
-  ldap_mapping dn_attribute: 'cn', prefix: '',
+  ldap_mapping dn_attribute: 'CN', prefix: '',
                classes: ['top', 'organizationalPerson', 'person', 'user'],
                scope: :sub
 
@@ -138,7 +138,7 @@ class LdapUser < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    user['ou'] || DEFAULT_PREFIX
+    CandiboxHelpers.ensure_uppercase_dn_component(user['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes

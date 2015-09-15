@@ -1,7 +1,7 @@
 require 'active_ldap'
 class LdapGroup < ActiveLdap::Base
   DEFAULT_PREFIX = 'CN=Users'
-  ldap_mapping dn_attribute: 'cn', prefix: '',
+  ldap_mapping dn_attribute: 'CN', prefix: '',
                classes: ['top', 'group'],
                scope: :sub
 
@@ -47,7 +47,11 @@ class LdapGroup < ActiveLdap::Base
         'sAMAccountName' => 'name',
         'gidNumber' => 'gid_number',
         'description' => 'description',
-        'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| LdapUser.find("uid=#{uid}").dn unless LdapUser.find("uid=#{uid}").blank?}).compact},
+        'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| 
+          unless LdapUser.find("uid=#{uid}").blank?
+            CandiboxHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
+          end
+          }).compact.sort},
         'objectCategory' => Proc.new{self.object_category},
         'groupType' => Proc.new{self.group_type},
     }
@@ -82,7 +86,7 @@ class LdapGroup < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    group['ou'] || DEFAULT_PREFIX
+    CandiboxHelpers.ensure_uppercase_dn_component(group['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes
@@ -111,7 +115,7 @@ class LdapGroup < ActiveLdap::Base
       self.set_attributes!
       self.save!
       ensure_ou_change
-
+      
     rescue => e
       $stderr.puts "Error syncing group to LDAP: #{e}"
       $stderr.puts self.errors.full_messages
