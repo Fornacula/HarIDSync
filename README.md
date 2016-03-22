@@ -420,3 +420,7 @@ Try to synchronize data with HarID portal by running command:
   ]
 }
 ```
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/hitsa/candibox/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
