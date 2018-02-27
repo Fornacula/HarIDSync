@@ -49,7 +49,7 @@ class LdapGroup < ActiveLdap::Base
         'description' => 'description',
         'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| 
           unless LdapUser.find("uid=#{uid}").blank?
-            CandiboxHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
+            HaridSyncHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
           end
           }).compact.sort},
         'objectCategory' => Proc.new{self.object_category},
@@ -86,7 +86,7 @@ class LdapGroup < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    CandiboxHelpers.ensure_uppercase_dn_component(group['ou'] || DEFAULT_PREFIX)
+    HaridSyncHelpers.ensure_uppercase_dn_component(group['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes
@@ -123,7 +123,7 @@ class LdapGroup < ActiveLdap::Base
   end
 
   def self.sync_all_to_ldap(groups)
-    puts "Syncing database groups to LDAP"
+    puts "Syncing HarID AD/LDAP groups to your LDAP server"
     groups.each do |group|
       ldap_group = LdapGroup.find_ldap_group(group["name"])
       ldap_group.group = group

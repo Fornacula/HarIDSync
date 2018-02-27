@@ -1,12 +1,13 @@
 require 'active_ldap'
 require 'base64'
 require 'openssl'
+
 class LdapUser < ActiveLdap::Base
   GEN_PW_LENGTH = 24
   DEFAULT_PREFIX = 'CN=Users'
 
   ldap_mapping dn_attribute: 'CN', prefix: '',
-               classes: ['top', 'organizationalPerson', 'person', 'user'],
+               classes: ['top', 'organizationalPerson'],
                scope: :sub
 
   AUXILIARY_CLASSES = %w(posixAccount inetOrgPerson)
@@ -18,6 +19,42 @@ class LdapUser < ActiveLdap::Base
 
   class << self
     attr_accessor :private_key
+
+    def find_or_create_ldap_user(uid)
+      LdapUser.find(:first, "sAMAccountName=#{uid}") || LdapUser.new(uid)
+    end
+
+    def sync_all_to_ldap(users, private_key_file)
+      puts "Syncing HarID AD/LDAP users to your LDAP server"
+      begin
+        key = OpenSSL::PKey::RSA.new File.read(private_key_file)
+        self.private_key = key
+      rescue => e
+        $stderr.puts "Error opening private key file: #{e}"
+        exit 1
+      end
+      users.each do |user|
+        ldap_user = LdapUser.find_or_create_ldap_user(user["uid"])
+        puts ldap_user.inspect
+        ldap_user.user = user
+        ldap_user.sync
+      end
+    end
+
+    def remove_from_ldap(users)
+      puts "Removing deleted users from LDAP"
+      users.each do |user|
+        begin
+          ldap_user = LdapUser.find(:first, :filter => "(&(sAMAccountName=#{user['uid']})(uidNumber=#{user['uid_number']}))")
+          if ldap_user.present?
+            ldap_user.destroy
+          end
+        rescue => e
+          $stderr.puts "Error occured while deleting user #{user['uid']} from LDAP: #{e}"
+          $stderr.puts "error (See log for more details)"
+        end
+      end
+    end
   end
 
   def add_auxiliary_classes
@@ -41,8 +78,8 @@ class LdapUser < ActiveLdap::Base
   def generate_gecos
     data = []
     data << self.full_name
-    data << user["primary_phone"]
-    data << user["primary_email"]
+    data << user["phone"]
+    data << user["email"]
 
     data.compact.join(",")
   end
@@ -69,9 +106,8 @@ class LdapUser < ActiveLdap::Base
         'cn'                          => Proc.new{self.generate_cn},
         'givenName'                   => 'first_name',
         'sn'                          => 'last_name',
-        'telephoneNumber'             => 'primary_phone',
-        'otherTelephone'              => 'phone_numbers',
-        'mail'                        => 'primary_email',
+        'telephoneNumber'             => 'phone',
+        'mail'                        => 'email',
         'unicodePwd'                  => Proc.new{self.ad_encoded_password},
         'unixHomeDirectory'           => 'unix_home_directory',
         'loginShell'                  => 'shell',
@@ -84,7 +120,7 @@ class LdapUser < ActiveLdap::Base
   # Return hash of attributes with LDAP naming
   def attributes_from_user
     user_attributes = {}
-    self.ldap_attribute_map.each do |ldap_attr, attr|
+    ldap_attribute_map.each do |ldap_attr, attr|
       user_attributes[ldap_attr] = attr.is_a?(Proc) ? attr.call(self.user) : self.user[attr]
     end
     user_attributes
@@ -109,17 +145,12 @@ class LdapUser < ActiveLdap::Base
     return "\"#{password}\"".encode(Encoding.find('UTF-16LE'))
   end
 
-
   # Decrypt password
   def decrypted_password
     cpw = user["password_crypt"]
     return nil if cpw.nil?
 
     self.class.private_key.private_decrypt(Base64.decode64(cpw))
-  end
-
-  def self.find_ldap_user(uid)
-    LdapUser.find(:first, "sAMAccountName=#{uid}") || LdapUser.new(uid)
   end
 
   # Store previous DN base value so it won't get lost when setting CN attribute
@@ -138,7 +169,7 @@ class LdapUser < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    CandiboxHelpers.ensure_uppercase_dn_component(user['ou'] || DEFAULT_PREFIX)
+    HaridSyncHelpers.ensure_uppercase_dn_component(user['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes
@@ -168,40 +199,9 @@ class LdapUser < ActiveLdap::Base
       save!
       ensure_ou_change
     rescue => e
-      $stderr.puts "Error syncing #{self.cn} user #{self.sAMAccountName} to LDAP: #{e}"
+      $stderr.puts "Error syncing #{self.cn} user to LDAP: #{e}"
       $stderr.puts self.errors.full_messages
       puts "error (See log for more details)"
-    end
-  end
-
-  def self.sync_all_to_ldap(users, private_key_file)
-    puts "Syncing database users to LDAP"
-    begin
-      key = OpenSSL::PKey::RSA.new File.read(private_key_file)
-      self.private_key = key
-    rescue => e
-      $stderr.puts "Error opening private key file: #{e}"
-      exit 1
-    end
-    users.each do |user|
-      ldap_user = LdapUser.find_ldap_user(user["uid"])
-      ldap_user.user = user
-      ldap_user.sync
-    end
-  end
-
-  def self.remove_from_ldap(users)
-    puts "Removing deleted users from LDAP"
-    users.each do |user|
-      begin
-        ldap_user = LdapUser.find(:first, :filter => "(&(sAMAccountName=#{user['uid']})(uidNumber=#{user['uid_number']}))")
-        if ldap_user.present?
-          ldap_user.destroy
-        end
-      rescue => e
-        $stderr.puts "Error occured while deleting user #{user['uid']} from LDAP: #{e}"
-        $stderr.puts "error (See log for more details)"
-      end
     end
   end
 end

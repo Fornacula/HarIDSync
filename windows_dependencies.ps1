@@ -2,13 +2,13 @@ $start_time = Get-Date
 Add-Type -assembly "system.io.compression.filesystem"
 
 $32_bit_links =
-@("http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.1.7.exe",
+@("http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.3.3.exe",
  "http://dl.bintray.com/oneclick/rubyinstaller/DevKit-mingw64-32-4.7.2-20130224-1151-sfx.exe",
  "https://github.com/git-for-windows/git/releases/download/v2.5.2.windows.1/PortableGit-2.5.2-32-bit.7z.exe",
  "http://curl.haxx.se/ca/cacert.pem")
 
 $64_bit_links =
-@("https://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.1.7-x64.exe",
+@("https://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.3.3-x64.exe",
  "http://dl.bintray.com/oneclick/rubyinstaller/DevKit-mingw64-64-4.7.2-20130224-1432-sfx.exe",
  "https://github.com/git-for-windows/git/releases/download/v2.5.2.windows.1/PortableGit-2.5.2-64-bit.7z.exe",
  "http://curl.haxx.se/ca/cacert.pem")
