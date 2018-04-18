@@ -8,8 +8,8 @@ HarID LDAP/AD sync is client utility tool to keep your LDAP/AD server updated wi
 
 ## Instructions on Ubuntu/Debian
 ### Requirements
-  - Ruby (2.x.x with development headers - ruby-dev) and `bundler` gem _- tested with Ruby 2.1.2p95_
-  - remote or local LDAP server or Windows AD DS _- tested with Samba4 (see: [Installing Samba](#installing-samba)) and Windows AD DS_
+  - Ruby (development headers - ruby-dev) and `bundler` gem _- tested with Ruby 2.4.2p198
+  - remote or local LDAP server or Windows AD 
 
 ### Install HarID LDAP/AD sync
 
@@ -54,6 +54,9 @@ ldap_method => whether to use :ssl, :tls, or :plain (unencrypted)
 
 **NB! Before you can synchronize with HarID portal you must login to HarID and authorize your newly generated public key in HarID portal. Please contact HarID customer support, if you need any help.**
 
+Howto doc for managing API keys in HarID portal:
+In English: https://harid.ee/docs/en/how_to_manage_api_users_for_harid_ad_ldap_sync.html
+Eesti keeles: https://harid.ee/docs/et/kuidas_lisada_api_kasutaja_harid_ad_ldap_andmevahetuseks.html
 
 ```sh
 $ bin/harid_sync read_public_key
@@ -209,8 +212,8 @@ https://github.com/oneclick/rubyinstaller/issues/148
 
 #### DevKit installation
 HarID Sync depends on some native extensions. Ruby Development Kit must be installed to use them.
-1. Download Development Kit `For use with Ruby 2.0 and above (x64 - 64bits only)` from http://rubyinstaller.org/downloads/
-2. Extract it to permanent location for example `C:\Ruby21-DevKit-x64`
+1. Download Development Kit `For use with Ruby 2.4 and above (x64 - 64bits only)` from http://rubyinstaller.org/downloads/
+2. Extract it to permanent location for example `C:\Ruby24-DevKit-x64`
 3. In CMD navigate to extracted development kit folder and run the following commands:
 
  ```

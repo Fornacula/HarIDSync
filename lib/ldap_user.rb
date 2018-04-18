@@ -20,8 +20,8 @@ class LdapUser < ActiveLdap::Base
   class << self
     attr_accessor :private_key
 
-    def find_or_create_ldap_user(uid)
-      LdapUser.find(:first, "sAMAccountName=#{uid}") || LdapUser.new(uid)
+    def find_or_create(uid)
+      LdapUser.find(:first, "uid=#{uid}") || LdapUser.new(uid)
     end
 
     def sync_all_to_ldap(users, private_key_file)
@@ -34,8 +34,7 @@ class LdapUser < ActiveLdap::Base
         exit 1
       end
       users.each do |user|
-        ldap_user = LdapUser.find_or_create_ldap_user(user["uid"])
-        puts ldap_user.inspect
+        ldap_user = LdapUser.find_or_create(user["uid"])
         ldap_user.user = user
         ldap_user.sync
       end
@@ -51,9 +50,21 @@ class LdapUser < ActiveLdap::Base
           end
         rescue => e
           $stderr.puts "Error occured while deleting user #{user['uid']} from LDAP: #{e}"
-          $stderr.puts "error (See log for more details)"
         end
       end
+    end
+  end
+
+  def sync
+    begin
+      store_prev_dn_base
+      add_auxiliary_classes
+      set_attributes!
+      save!
+      ensure_ou_change
+    rescue => e
+      $stderr.puts "Error syncing user #{self.cn} to LDAP: #{e}"
+      $stderr.puts self.errors.full_messages
     end
   end
 
@@ -66,6 +77,7 @@ class LdapUser < ActiveLdap::Base
   def set_attributes!
     raise ArgumentError, "User is not set" if self.user.blank?
     attributes_from_user.each do |attr, value|
+      next unless has_attribute?(attr)
       self.set_attribute(attr, value)
     end
   end
@@ -102,6 +114,7 @@ class LdapUser < ActiveLdap::Base
         'uid'                         => 'uid',
         'sAMAccountName'              => 'uid',
         'uidNumber'                   => 'uid_number',
+        'gid'                         => 'gid',
         'gidNumber'                   => 'gid_number',
         'cn'                          => Proc.new{self.generate_cn},
         'givenName'                   => 'first_name',
@@ -109,7 +122,7 @@ class LdapUser < ActiveLdap::Base
         'telephoneNumber'             => 'phone',
         'mail'                        => 'email',
         'unicodePwd'                  => Proc.new{self.ad_encoded_password},
-        'unixHomeDirectory'           => 'unix_home_directory',
+        'homeDirectory'               => 'unix_home_directory',
         'loginShell'                  => 'shell',
         'gecos'                       => Proc.new{self.generate_gecos},
         'objectCategory'              => Proc.new{object_category},
@@ -188,20 +201,6 @@ class LdapUser < ActiveLdap::Base
       return true
     else
       return false
-    end
-  end
-
-  def sync
-    begin
-      store_prev_dn_base
-      add_auxiliary_classes
-      set_attributes!
-      save!
-      ensure_ou_change
-    rescue => e
-      $stderr.puts "Error syncing #{self.cn} user to LDAP: #{e}"
-      $stderr.puts self.errors.full_messages
-      puts "error (See log for more details)"
     end
   end
 end

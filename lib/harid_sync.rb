@@ -158,7 +158,7 @@ class HaridSync < Thor
       end
       
       url = smart_add_url_protocol("#{host}#{uri.request_uri}")
-      puts "Requested: #{url}"
+      puts "GET request: #{url}"
       request = Net::HTTP::Get.new(url)
 
       if secret && username
@@ -203,7 +203,7 @@ class HaridSync < Thor
 
     def synchronize(users, groups, deleted_users, deleted_groups)
       LdapUser.sync_all_to_ldap(users, box_key)
-      LdapGroup.sync_all_to_ldap(groups)
+      LdapGroup.sync_all_to_ldap(groups, box_key)
       LdapUser.remove_from_ldap(deleted_users)
       LdapGroup.remove_from_ldap(deleted_groups)
       say "Synchronization completed."

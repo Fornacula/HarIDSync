@@ -2,7 +2,7 @@ require 'active_ldap'
 class LdapGroup < ActiveLdap::Base
   DEFAULT_PREFIX = 'CN=Users'
   ldap_mapping dn_attribute: 'CN', prefix: '',
-               classes: ['top', 'group'],
+               classes: ['top', 'posixGroup'],
                scope: :sub
 
   AUXILIARY_CLASSES = %w(posixGroup)
@@ -16,6 +16,58 @@ class LdapGroup < ActiveLdap::Base
 
   attr_accessor :group
 
+  class << self
+    attr_accessor :private_key
+
+    def sync_all_to_ldap(groups, private_key_file)
+      puts "Syncing HarID AD/LDAP groups to your LDAP server"
+      begin
+        key = OpenSSL::PKey::RSA.new File.read(private_key_file)
+        self.private_key = key
+      rescue => e
+        $stderr.puts "Error opening private key file: #{e}"
+        exit 1
+      end
+
+      groups.each do |group|
+        ldap_group = LdapGroup.find_or_create(group['gid_number'], group['name'])
+        ldap_group.group = group
+        ldap_group.sync
+      end
+    end
+
+    def remove_from_ldap(groups)
+      puts "Removing deleted groups from LDAP"
+      groups.each do |group|
+        begin
+          ldap_group = LdapGroup.find(:first, "gidNumber=#{gid_number}")
+          if ldap_group.present?
+            ldap_group.destroy
+          end
+        rescue => e
+          $stderr.puts "Error occured while deleting group from LDAP: #{e}"
+        end
+      end
+    end
+
+    def find_or_create(gid_number, name)
+      LdapGroup.find(:first, "gidNumber=#{gid_number}") || LdapGroup.new(name)
+    end
+  end
+
+  def sync
+    begin
+      store_prev_dn_base
+      add_auxiliary_classes
+      set_attributes!
+      save!
+      ensure_ou_change
+    rescue => e
+      $stderr.puts "Error syncing group #{gid_number} to LDAP: #{e}"
+      $stderr.puts self.errors.full_messages
+    end
+  end
+
   def add_auxiliary_classes
     AUXILIARY_CLASSES.each do |ac|
       self.classes.include?(ac) or self.add_class(ac)
@@ -25,6 +77,7 @@ class LdapGroup < ActiveLdap::Base
   def set_attributes!
     raise ArgumentError, "Group is not set" if self.group.blank?
     attributes_from_group.each do |attr, value|
+      next unless has_attribute?(attr)
       self.set_attribute(attr, value)
     end
   end
@@ -43,17 +96,17 @@ class LdapGroup < ActiveLdap::Base
   # Supports both symbols and lambdas (gives self as first attribute)
   def ldap_attribute_map
     {
-        'cn' => 'name',
-        'sAMAccountName' => 'name',
-        'gidNumber' => 'gid_number',
-        'description' => 'description',
-        'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| 
-          unless LdapUser.find("uid=#{uid}").blank?
-            HaridSyncHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
-          end
-          }).compact.sort},
-        'objectCategory' => Proc.new{self.object_category},
-        'groupType' => Proc.new{self.group_type},
+      'cn' => 'name',
+      'sAMAccountName' => 'name',
+      'gidNumber' => 'gid_number',
+      'description' => 'description',
+      'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| 
+        unless LdapUser.find("uid=#{uid}").blank?
+          HaridSyncHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
+        end
+        }).compact.sort},
+      'objectCategory' => Proc.new{self.object_category},
+      'groupType' => Proc.new{self.group_type},
     }
   end
 
@@ -64,10 +117,6 @@ class LdapGroup < ActiveLdap::Base
       group_attributes[ldap_attr] = attr.is_a?(Proc) ? attr.call(self.group) : self.group[attr]
     end
     group_attributes
-  end
-
-  def self.find_ldap_group(name)
-    LdapGroup.find(:first, "sAMAccountName=#{name}") || LdapGroup.new(name)
   end
 
   # Store previous DN base value so it won't get lost when setting CN attribute
@@ -105,44 +154,6 @@ class LdapGroup < ActiveLdap::Base
       return true
     else
       return false
-    end
-  end
-
-  def sync
-    begin
-      store_prev_dn_base
-      self.add_auxiliary_classes
-      self.set_attributes!
-      self.save!
-      ensure_ou_change
-    rescue => e
-      $stderr.puts "Error syncing group #{self.sAMAccountName} to LDAP: #{e}"
-      $stderr.puts self.errors.full_messages
-      puts "error (See log for more details)"
-    end
-  end
-
-  def self.sync_all_to_ldap(groups)
-    puts "Syncing HarID AD/LDAP groups to your LDAP server"
-    groups.each do |group|
-      ldap_group = LdapGroup.find_ldap_group(group["name"])
-      ldap_group.group = group
-      ldap_group.sync
-    end
-  end
-
-  def self.remove_from_ldap(groups)
-    puts "Removing deleted groups from LDAP"
-    groups.each do |group|
-      begin
-        ldap_group = LdapGroup.find(:first, :filter => "(&(sAMAccountName=#{group['name']})(gidNumber=#{group['gid_number']}))")
-        if ldap_group.present?
-          ldap_group.destroy
-        end
-      rescue => e
-        $stderr.puts "Error occured while deleting group from LDAP: #{e}"
-        puts "error (See log for more details)"
-      end
     end
   end
 end
