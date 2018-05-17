@@ -118,7 +118,7 @@ class HaridSync < Thor
     end
 
     def generate_configuration_file
-      config_template = File.expand_path("../config/harid_sync.yml.dist", __dir__)
+      config_template = File.expand_path("../config/harid_sync_example.yml", __dir__)
       FileUtils.cp config_template, config_file
       attributes = YAML::load_file(config_file)
       case

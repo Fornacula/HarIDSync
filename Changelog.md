@@ -1,3 +1,7 @@
+Release 0.0.3
+* Added missing config/harid_sync_example.yml
+* Moved ca certificate info into code for clearity.
+
 Release 0.0.2
 * Updated readme
 * Refactored codebase

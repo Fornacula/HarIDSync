@@ -1,6 +1,5 @@
 /config/*.yml
 /config/*.key
 /config/*.crt
-
-# added by GitSavvy
+!/config/harid_sync_example.yml
 /.bundle/

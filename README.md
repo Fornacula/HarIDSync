@@ -26,24 +26,35 @@ Run setup command which will install all Ruby dependencies into `.bundle` folder
 $ bin/setup
 ```
 
-Change generated settings in `config/harid_sync.yml` with valid information. Example is given in `config/harid_sync.yml.dist` file:
+Change generated settings in `config/harid_sync.yml` with valid information. Example is given in `config/harid_sync_example.yml` file:
 
 ```yml
-portal_hostname: example.harid.ee
+# HarID portal attributes
+portal_hostname: harid.ee
 portal_port: 443
+
+# In order to get api_user and secret, please login to harid.ee and follow setup guide:
+# Guide in English: https://harid.ee/docs/en/how_to_manage_api_users_for_harid_ad_ldap_sync.html
+# Juhend eesti keeles: https://harid.ee/docs/et/kuidas_lisada_api_kasutaja_harid_ad_ldap_andmevahetuseks.html
 api_user: SomEu5eR
 secret: SecretTok3n
+box_key: harid.key
 
-#portal_ca_cert: harid.ee.crt
-box_key: server.key
-
-# LDAP connection setup
+# Your LDAP server connection setup
 ldap_host: localhost
 ldap_port: 636
-ldap_method: :ssl
+
+# whether to use :ssl, :tls, or :plain (unencrypted)
+ldap_method: :ssl 
+
+# 'ldap_base' is where you search for users etc.
 ldap_base: DC=example,DC=com
-ldap_bind_dn: CN=Administrator,CN=Users,DC=example,DC=com
-ldap_password: Pa$$w0rd
+
+# 'ldap_bind_dn' is the user on the LDAP server permitted to overwrite the LDAP directory within the defined search base.
+ldap_bind_dn: cn=admin,dc=example,dc=com
+
+# 'ldap_password' is the password for the bind_dn user.
+ldap_password: testtest
 ```
 
 Descriptions:
@@ -77,8 +88,6 @@ $ ./bin/harid_sync help
 ```
 
 ### How to sync data with HarID portal
-
-Before starting the script please ensure HarID portal HTTPS certificate can be validated by OpenSSL. By default, the script would use OpenSSL CA Bundle (in `/etc/ssl/certs` on most systems), but if for some reason that is not the case, download full certificate chain PEM file from the portal and use  `--server_ca_cert` to specify it's location to the script.
 
 Synchronize with default values from `config/harid_sync.yml` file:
 
