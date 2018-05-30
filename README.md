@@ -7,6 +7,66 @@ HarID LDAP/AD sync is client utility tool to keep your LDAP/AD server updated wi
   - CRUD for LDAP server users and groups
 
 ## Instructions on Ubuntu/Debian
+
+```sh
+$ git clone https://github.com/hariduspilv/HarIDSync
+$ bin/harid_sync setup
+```
+
+Change generated settings in `config/harid_sync.yml` with valid information. Example is given in `config/harid_sync_example.yml` file:
+
+```yml
+# HarID portal attributes
+portal_hostname: harid.ee
+portal_port: 443
+
+# In order to get api_user and secret, please login to harid.ee and follow setup guide:
+# Guide in English: https://harid.ee/docs/en/how_to_manage_api_users_for_harid_ad_ldap_sync.html
+# Juhend eesti keeles: https://harid.ee/docs/et/kuidas_lisada_api_kasutaja_harid_ad_ldap_andmevahetuseks.html
+api_user: SomEu5eR
+secret: SecretTok3n
+box_key: harid.key
+
+# Your LDAP server connection setup
+ldap_host: localhost
+ldap_port: 636
+
+# whether to use :ssl, :tls, or :plain (unencrypted)
+ldap_method: :ssl 
+
+# 'ldap_base' is where you search for users etc.
+ldap_base: DC=example,DC=com
+
+# 'ldap_bind_dn' is the user on the LDAP server permitted to overwrite the LDAP directory within the defined search base.
+ldap_bind_dn: cn=admin,dc=example,dc=com
+
+# 'ldap_password' is the password for the bind_dn user.
+ldap_password: testtest
+```
+
+Descriptions:
+ldap_base => is where you overwrite users, groups etc.
+ldap_bind_dn => is the user on the LDAP server permitted to overwrite your LDAP directory within the defined ldap_base.
+ldap_password => is the password for the bind_dn user.
+ldap_method => whether to use :ssl, :tls, or :plain (unencrypted)
+
+**NB! Before you can synchronize with HarID portal you must login to HarID and authorize your newly generated public key in HarID portal. Please contact HarID customer support, if you need any help.**
+
+Howto doc for managing API keys in HarID portal:
+In English: https://harid.ee/docs/en/how_to_manage_api_users_for_harid_ad_ldap_sync.html
+Eesti keeles: https://harid.ee/docs/et/kuidas_lisada_api_kasutaja_harid_ad_ldap_andmevahetuseks.html
+
+```sh
+$ bin/harid_sync read_public_key
+```
+
+Synchronize with HarID using config values from `config/harid_sync.yml` file:
+
+```
+$ bin/harid_sync sync
+```
+
+## Development setup instructions on Ubuntu/Debian
 ### Requirements
   - Ruby (development headers - ruby-dev) and `bundler` gem _- tested with Ruby 2.4.2p198
   - remote or local LDAP server or Windows AD 
