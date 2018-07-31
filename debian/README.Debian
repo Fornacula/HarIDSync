@@ -1,0 +1,6 @@
+haridsync for Debian
+--------------------
+
+HarIDSync Debian package will install crontab executing HarIDSync in every 5 minutes by default.
+
+ -- Information Technology Foundation for Education <info@hitsa.ee>  Mon, 16 Jul 2018 08:42:17 -0400

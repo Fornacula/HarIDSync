@@ -1,9 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
-script_dir=`dirname $(readlink -f $0)`
-# Install all Ruby dependencies into .bundle folder
-cd `dirname "$script_dir"` && bundle install --path .bundle
-
-# Generate HarID Sync private key and default settings 
-echo cd `dirname "$script_dir"` && bin/harid_sync setup

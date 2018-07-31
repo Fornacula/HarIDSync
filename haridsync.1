@@ -1,0 +1,25 @@
+.\" Manpage for haridsync.
+.\" Contact Information Technology Foundation for Education <info@hitsa.ee> to correct errors or typos.
+.TH man 1 "06 July 2018" "0.0.5" "haridsync man page"
+.SH NAME
+haridsync \- sync LDAP server with HarID (https://harid.ee) 
+.SH SYNOPSIS
+haridsync [sync, setup, read_public_key, help]
+.SH DESCRIPTION
+ HarIDSync is a client utility tool to keep your LDAP/AD server 
+ updated with HarID (https://harid.ee). Technically HarID LDAP/AD sync utility 
+ makes requests to HarID JSON API and updates your LDAP/AD server.
+.SH OPTIONS
+.IP sync
+Update your LDAP server attributes with HarID.
+.IP setup
+Generates configuration file config/haridsync.yml How to manage sync api users in HarID, in English: 
+https://harid.ee/docs/en/how_to_manage_api_users_for_harid_ad_ldap_sync.html 
+In Estonian: 
+https://harid.ee/docs/et/kuidas_lisada_api_kasutaja_harid_ad_ldap_andmevahetuseks.html
+.IP read_public_key
+Outputs existing public key what should be entered into HarID. 
+.IP help
+Outputs help info.
+.SH AUTHOR
+Information Technology Foundation for Education <info@hitsa.ee>

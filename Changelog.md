@@ -1,3 +1,8 @@
+Release 0.0.5
+* Renamed HarID Sync to HarIDSync without space
+* Added Debian package builder with changes to HarIDSync
+* Added HarID documentation links for setup output
+
 Release 0.0.4
 * Added binary executable package
 

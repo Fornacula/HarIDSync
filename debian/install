@@ -1,0 +1,3 @@
+debian/bin/haridsync usr/bin/
+bin/haridsync_bin usr/bin/
+config/cacert.pem etc/haridsync/

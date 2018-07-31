@@ -1,0 +1,9 @@
+Document: haridsync
+Title: Debian haridsync Manual
+Author: Information Technology Foundation for Education <info@hitsa.ee>
+Abstract: HarIDSync is a client utility tool to keep your LDAP/AD server
+ updated with harid.ee. Technically HarIDSync makes requests 
+ from your server to HarID JSON API and updates data in your LDAP/AD server. 
+
+Format: text
+Files: /usr/share/doc/haridsync/haridsync.text.gz

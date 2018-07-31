@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+ENCLOSE_IO_WORKDIR=/usr/share/haridsync /usr/bin/haridsync_bin "$@"

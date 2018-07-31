@@ -1,0 +1,17 @@
+Source: haridsync
+Maintainer: Information Technology Foundation for Education <info@hitsa.ee>
+Section: admin
+Priority: optional
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/hariduspilv/HarIDSync
+Vcs-Git: https://github.com/hariduspilv/HarIDSync.git
+Vcs-Browser: https://github.com/hariduspilv/HarIDSync
+
+Package: haridsync
+Architecture: amd64
+Depends: cron | cron-daemon | anacron, adduser, ${misc:Depends}, ${shlibs:Depends}
+Description: HarIDSync is a client utility tool to keep your LDAP/AD server 
+ updated with harid.ee. Technically HarIDSync makes requests 
+ from your server to HarID JSON API and updates data in your LDAP/AD server.
+Homepage: https://github.com/hariduspilv/HarIDSync

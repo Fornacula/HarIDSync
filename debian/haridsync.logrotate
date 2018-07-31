@@ -1,0 +1,10 @@
+/var/log/haridsync {
+  weekly
+  size 100M
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  create 640 haridsync adm
+}

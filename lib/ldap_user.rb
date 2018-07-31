@@ -44,7 +44,7 @@ class LdapUser < ActiveLdap::Base
       puts "Removing deleted users from LDAP"
       users.each do |user|
         begin
-          ldap_user = LdapUser.find(:first, :filter => "(&(sAMAccountName=#{user['uid']})(uidNumber=#{user['uid_number']}))")
+          ldap_user = LdapUser.find(:first, "uidNumber=#{user['uid_number']}")
           if ldap_user.present?
             ldap_user.destroy
           end
@@ -182,7 +182,7 @@ class LdapUser < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    HaridSyncHelpers.ensure_uppercase_dn_component(user['ou'] || DEFAULT_PREFIX)
+    HaridsyncHelpers.ensure_uppercase_dn_component(user['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes

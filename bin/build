@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+read VERSION < lib/version
+
+rm -fr build/haridsync-$VERSION
+mkdir -p build/haridsync-$VERSION
+cp -rf * build/haridsync-$VERSION/
+
+cd build/haridsync-$VERSION
+rm -f a.out
+rm -f bin/haridsync_bin
+rm -rf debian/haridsync
+rm -f config/harid.key
+rm -f config/haridsync.yml
+rm -rf vendor
+rm -rf packages
+rm -rf build
+CPPFLAGS="-P" ../../vendor/rubyc-linux-x64 bin/haridsync.rb
+mv a.out bin/haridsync_bin
+cp bin/haridsync_bin ../../bin
+
+cd .. 
+tar vcJf haridsync_$VERSION.orig.tar.xz haridsync-$VERSION/*
+
+cd haridsync-$VERSION
+debuild -us -uc
+cd ..
+cp haridsync_$VERSION-1_amd64.deb ../packages/

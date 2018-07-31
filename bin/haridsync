@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+BINPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+ENCLOSE_IO_WORKDIR=$BINPATH/.. $BINPATH/haridsync_bin "$@"

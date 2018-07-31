@@ -102,7 +102,7 @@ class LdapGroup < ActiveLdap::Base
       'description' => 'description',
       'member' => Proc.new{|grp| (grp["member_uids"].map { |uid| 
         unless LdapUser.find("uid=#{uid}").blank?
-          HaridSyncHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
+          HaridsyncHelpers.ensure_uppercase_dn_component(LdapUser.find("uid=#{uid}").dn.to_s)
         end
         }).compact.sort},
       'objectCategory' => Proc.new{self.object_category},
@@ -135,7 +135,7 @@ class LdapGroup < ActiveLdap::Base
 
   # Prepend either OU or Default Prefix to the base
   def base_prefix
-    HaridSyncHelpers.ensure_uppercase_dn_component(group['ou'] || DEFAULT_PREFIX)
+    HaridsyncHelpers.ensure_uppercase_dn_component(group['ou'] || DEFAULT_PREFIX)
   end
 
   # Computes new OU base from attributes

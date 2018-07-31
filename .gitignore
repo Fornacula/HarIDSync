@@ -1,5 +1,6 @@
 /config/*.yml
 /config/*.key
 /config/*.crt
-!/config/harid_sync_example.yml
+!/config/haridsync_example.yml
 /.bundle/
+/build
