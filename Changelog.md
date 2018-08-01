@@ -1,3 +1,6 @@
+Release 0.0.5.1
+* Added live deb package info into Readme
+
 Release 0.0.5
 * Renamed HarID Sync to HarIDSync without space
 * Added Debian package builder with changes to HarIDSync

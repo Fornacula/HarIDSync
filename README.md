@@ -11,7 +11,7 @@ HarIDSync is client utility tool to keep your LDAP/AD server updated with HarID 
 Add official repo to your list (not working yet):
 
 ```sh
-  echo "deb [trusted=yes] https://TOKEN@apt.fury.io/fornacula/ /" | sudo tee --append /etc/apt/sources.list.d/fury.list
+  echo "deb [trusted=yes] https://qUdEFyjXhSAfHTs1UsRw@apt.fury.io/harid/ /" | sudo tee --append /etc/apt/sources.list.d/fury.list
   sudo apt update
 ```
 
